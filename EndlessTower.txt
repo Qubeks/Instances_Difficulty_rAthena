@@ -257,182 +257,114 @@ e_tower,81,105,0	script	Tower Protection Stone	406,{
 				( .@party_id && instance_id(IM_PARTY) )?"Enter the dungeon":"",
 				"Return to Alberta",
 				"Difficulty Information",
-				"Cancel"))
-				{
-				case 1:
-	// Difficulty 
-	//============================================================
-					.@level_mode = select(
-						"[ Level 50+ ] Normal", 
-						"[ Level 100+ ] Veteran", 
-						"[ Level 150+ ] Nightmare",
-						"[ Level 200+ ] Hell",
-						"[ Level 240+ ] ^ff0000Torment^000000"
-					);
-					$ENDLESSMODE[getcharid(1)] = .@level_mode;
-					setarray .@modes$[1], "Normal Mode", "Veteran Mode", "Nightmare Mode", "Hell Mode", "Torment Mode";
-					set .@required_level, 0;
+				"Cancel")){
+					case 1:
+		// Difficulty 
+		//============================================================
+						.@level_mode = select(
+							"[ Level 50+ ] Normal", 
+							"[ Level 100+ ] Veteran", 
+							"[ Level 150+ ] Nightmare",
+							"[ Level 200+ ] Hell",
+							"[ Level 240+ ] ^ff0000Torment^000000"
+						);
+						$ENDLESSMODE[getcharid(1)] = .@level_mode;
+						setarray .@modes$[1], "Normal Mode", "Veteran Mode", "Nightmare Mode", "Hell Mode", "Torment Mode";
+						set .@required_level, 0;
 
-					if (.@level_mode == 1) { .@required_level = 50; }
-					else if (.@level_mode == 2) { .@required_level = 100; }
-					else if (.@level_mode == 3) { .@required_level = 150; }
-					else if (.@level_mode == 4) { .@required_level = 200; }
-					else if (.@level_mode == 5) { .@required_level = 260; }
+						if (.@level_mode == 1) { .@required_level = 50; }
+						else if (.@level_mode == 2) { .@required_level = 100; }
+						else if (.@level_mode == 3) { .@required_level = 150; }
+						else if (.@level_mode == 4) { .@required_level = 200; }
+						else if (.@level_mode == 5) { .@required_level = 260; }
 
-					if (!instance_check_party(getcharid(1),1,.@required_level, 260)) {
-						mes "All party members need to be at least Level " + .@required_level + " to enter."; 
-						close;				
-					} 
-					
-					mes "Your party meets the Memorial Dungeon requirements.";
-					.@modez$ = .@modes$[.@level_mode];				
-					announce "The party [ " + getpartyname(.@party_id) + " ] has registered "+.@md_name$+" on " + .@modez$ + ".", bc_all;
-					instance_create("Endless Tower");
-					close;					
+						if (!instance_check_party(getcharid(1),1,.@required_level, 260)) {
+							mes "All party members need to be at least Level " + .@required_level + " to enter."; 
+							close;				
+						} 
 						
-	//=============================================================
-				case 2:
-					callsub L_Enter,0,1;
-				case 3:
-					mes "I will move you to Alberta.";
-					close2;
-					warp "alberta",223,36;
-					end;
-				case 4:
-					mes "[ Difficulty Information ]";
-					mes "^ff0000-----------------------------------------------------^000000";
-					mes "Difficulty Level: ^ff0000[ Easy ]^000000";
-					mes "Monster HP: ^ff0000[ + 0% ]^000000";
-					mes "Monster damage: + ^ff0000[ 0% ]^000000";
-					mes "Monster takes less damage: + ^ff0000[ 0% ]^000000";
-					mes "Monster EXP reward: + ^ff0000[ 0% ]^000000";
-					mes ""+.@md_name$ +" Easy Points: + ^ff0000[ 10 ]^000000";
-					mes "^ff0000-----------------------------------------------------^000000";
-					next;
-					mes "[ Difficulty Information ]";
-					mes "^ff0000-----------------------------------------------------^000000";
-					mes "Difficulty Level: ^ff0000[ Veteran ]^000000";
-					mes "Monster HP: ^ff0000[ + 50% ]^000000";
-					mes "Monster damage: + ^ff0000[ 50% ]^000000";
-					mes "Monster takes less damage: + ^ff0000[ 10% ]^000000";
-					mes "Monster EXP reward: + ^ff0000[ 50% ]^000000";
-					mes ""+.@md_name$ +" Veteran Points: + ^ff0000[ 20 ]^000000";
-					mes "^ff0000-----------------------------------------------------^000000";
-					next;
-					mes "[ Difficulty Information ]";
-					mes "^ff0000-----------------------------------------------------^000000";
-					mes "Difficulty Level: ^ff0000[ Nightmare ]^000000";
-					mes "Monster HP: ^ff0000[ + 100% ]^000000";
-					mes "Monster damage: + ^ff0000[ 100% ]^000000";
-					mes "Monster takes less damage: + ^ff0000[ 20% ]^000000";
-					mes "Monster EXP reward: + ^ff0000[ 100% ]^000000";
-					mes ""+.@md_name$ +" Nightmare Points: + ^ff0000[ 40 ]^000000";
-					mes "^ff0000-----------------------------------------------------^000000";
-					next;
-					mes "[ Difficulty Information ]";
-					mes "^ff0000-----------------------------------------------------^000000";
-					mes "Difficulty Level: ^ff0000[ Hell ]^000000";
-					mes "Monster HP: ^ff0000[ + 150% ]^000000";
-					mes "Monster damage: + ^ff0000[ 150% ]^000000";
-					mes "Monster takes less damage: + ^ff0000[ 30% ]^000000";
-					mes "Monster EXP reward: + ^ff0000[ 150% ]^000000";
-					mes ""+.@md_name$ +" Hell Points: + ^ff0000[ 80 ]^000000";
-					mes "^ff0000-----------------------------------------------------^000000";
-					next;
-					mes "[ Difficulty Information ]";
-					mes "^ff0000-----------------------------------------------------^000000";
-					mes "Difficulty Level: ^ff0000[ Torment ]^000000";
-					mes "Monster HP: ^ff0000[ + 200% ]^000000";
-					mes "Monster damage: + ^ff0000[ 200% ]^000000";
-					mes "Monster takes less damage: + ^ff0000[ 40% ]^000000";
-					mes "Monster EXP reward: + ^ff0000[ 200% ]^000000";
-					mes ""+.@md_name$ +" Torment Points: + ^ff0000[ 160 ]^000000";
-					mes "^ff0000-----------------------------------------------------^000000";
-					close;				
-				case 5:
-					close;
+						mes "Your party meets the Memorial Dungeon requirements.";
+						.@modez$ = .@modes$[.@level_mode];				
+						announce "The party [ " + getpartyname(.@party_id) + " ] has registered "+.@md_name$+" on " + .@modez$ + ".", bc_all;
+						instance_create("Endless Tower");
+						close;					
+							
+		//=============================================================
+					case 2:
+						callsub L_Enter,0,1;
+					case 3:
+						mes "I will move you to Alberta.";
+						close2;
+						warp "alberta",223,36;
+						end;
+					case 4:
+						mes "[ Difficulty Information ]";
+						mes "^ff0000-----------------------------------------------------^000000";
+						mes "Difficulty Level: ^ff0000[ Easy ]^000000";
+						mes "Monster HP: ^ff0000[ + 0% ]^000000";
+						mes "Monster damage: + ^ff0000[ 0% ]^000000";
+						mes "Monster takes less damage: + ^ff0000[ 0% ]^000000";
+						mes "Monster EXP reward: + ^ff0000[ 0% ]^000000";
+						mes ""+.@md_name$ +" Easy Points: + ^ff0000[ 10 ]^000000";
+						mes "^ff0000-----------------------------------------------------^000000";
+						next;
+						mes "[ Difficulty Information ]";
+						mes "^ff0000-----------------------------------------------------^000000";
+						mes "Difficulty Level: ^ff0000[ Veteran ]^000000";
+						mes "Monster HP: ^ff0000[ + 50% ]^000000";
+						mes "Monster damage: + ^ff0000[ 50% ]^000000";
+						mes "Monster takes less damage: + ^ff0000[ 10% ]^000000";
+						mes "Monster EXP reward: + ^ff0000[ 50% ]^000000";
+						mes ""+.@md_name$ +" Veteran Points: + ^ff0000[ 20 ]^000000";
+						mes "^ff0000-----------------------------------------------------^000000";
+						next;
+						mes "[ Difficulty Information ]";
+						mes "^ff0000-----------------------------------------------------^000000";
+						mes "Difficulty Level: ^ff0000[ Nightmare ]^000000";
+						mes "Monster HP: ^ff0000[ + 100% ]^000000";
+						mes "Monster damage: + ^ff0000[ 100% ]^000000";
+						mes "Monster takes less damage: + ^ff0000[ 20% ]^000000";
+						mes "Monster EXP reward: + ^ff0000[ 100% ]^000000";
+						mes ""+.@md_name$ +" Nightmare Points: + ^ff0000[ 40 ]^000000";
+						mes "^ff0000-----------------------------------------------------^000000";
+						next;
+						mes "[ Difficulty Information ]";
+						mes "^ff0000-----------------------------------------------------^000000";
+						mes "Difficulty Level: ^ff0000[ Hell ]^000000";
+						mes "Monster HP: ^ff0000[ + 150% ]^000000";
+						mes "Monster damage: + ^ff0000[ 150% ]^000000";
+						mes "Monster takes less damage: + ^ff0000[ 30% ]^000000";
+						mes "Monster EXP reward: + ^ff0000[ 150% ]^000000";
+						mes ""+.@md_name$ +" Hell Points: + ^ff0000[ 80 ]^000000";
+						mes "^ff0000-----------------------------------------------------^000000";
+						next;
+						mes "[ Difficulty Information ]";
+						mes "^ff0000-----------------------------------------------------^000000";
+						mes "Difficulty Level: ^ff0000[ Torment ]^000000";
+						mes "Monster HP: ^ff0000[ + 200% ]^000000";
+						mes "Monster damage: + ^ff0000[ 200% ]^000000";
+						mes "Monster takes less damage: + ^ff0000[ 40% ]^000000";
+						mes "Monster EXP reward: + ^ff0000[ 200% ]^000000";
+						mes ""+.@md_name$ +" Torment Points: + ^ff0000[ 160 ]^000000";
+						mes "^ff0000-----------------------------------------------------^000000";
+						close;				
+					case 5:
+						close;
+					}
 				}
-			}
-			switch(select("Enter the "+.@md_name$+":Return to Alberta:Cancel")) {
-				case 1:
-					callsub L_Enter,0,1,1;
-				case 2:
-					mes "I will move you to Alberta.";
-					close2;
-					warp "alberta",223,36;
-					end;
-				case 3:
-					end;
-			}
-		case 0:
-		case 1:
-			if (.@etower_timer2 < 2 && getcharid(1) == etower_partyid) {
-				mes "If you have the dungeon generated already, you can enter it. ";
-				next;
-				switch(select("Enter the "+.@md_name$+":Return to Alberta:Difficulty Information:Cancel")) {
-				case 1:
-					callsub L_Enter,0,0;
-				case 2:
-					mes "I will move you to Alberta.";
-					close2;
-					warp "alberta",223,36;
-					end;
-				case 3:
-					mes "[ Difficulty Information ]";
-					mes "^ff0000-----------------------------------------------------^000000";
-					mes "Difficulty Level: ^ff0000[ Easy ]^000000";
-					mes "Monster HP: ^ff0000[ + 0% ]^000000";
-					mes "Monster damage: + ^ff0000[ 0% ]^000000";
-					mes "Monster takes less damage: + ^ff0000[ 0% ]^000000";
-					mes "Monster EXP reward: + ^ff0000[ 0% ]^000000";
-					mes ""+.@md_name$ +" Easy Points: + ^ff0000[ 10 ]^000000";
-					mes "^ff0000-----------------------------------------------------^000000";
-					next;
-					mes "[ Difficulty Information ]";
-					mes "^ff0000-----------------------------------------------------^000000";
-					mes "Difficulty Level: ^ff0000[ Veteran ]^000000";
-					mes "Monster HP: ^ff0000[ + 50% ]^000000";
-					mes "Monster damage: + ^ff0000[ 50% ]^000000";
-					mes "Monster takes less damage: + ^ff0000[ 10% ]^000000";
-					mes "Monster EXP reward: + ^ff0000[ 50% ]^000000";
-					mes ""+.@md_name$ +" Veteran Points: + ^ff0000[ 20 ]^000000";
-					mes "^ff0000-----------------------------------------------------^000000";
-					next;
-					mes "[ Difficulty Information ]";
-					mes "^ff0000-----------------------------------------------------^000000";
-					mes "Difficulty Level: ^ff0000[ Nightmare ]^000000";
-					mes "Monster HP: ^ff0000[ + 100% ]^000000";
-					mes "Monster damage: + ^ff0000[ 100% ]^000000";
-					mes "Monster takes less damage: + ^ff0000[ 20% ]^000000";
-					mes "Monster EXP reward: + ^ff0000[ 100% ]^000000";
-					mes ""+.@md_name$ +" Nightmare Points: + ^ff0000[ 40 ]^000000";
-					mes "^ff0000-----------------------------------------------------^000000";
-					next;
-					mes "[ Difficulty Information ]";
-					mes "^ff0000-----------------------------------------------------^000000";
-					mes "Difficulty Level: ^ff0000[ Hell ]^000000";
-					mes "Monster HP: ^ff0000[ + 150% ]^000000";
-					mes "Monster damage: + ^ff0000[ 150% ]^000000";
-					mes "Monster takes less damage: + ^ff0000[ 30% ]^000000";
-					mes "Monster EXP reward: + ^ff0000[ 150% ]^000000";
-					mes ""+.@md_name$ +" Hell Points: + ^ff0000[ 80 ]^000000";
-					mes "^ff0000-----------------------------------------------------^000000";
-					next;
-					mes "[ Difficulty Information ]";
-					mes "^ff0000-----------------------------------------------------^000000";
-					mes "Difficulty Level: ^ff0000[ Torment ]^000000";
-					mes "Monster HP: ^ff0000[ + 200% ]^000000";
-					mes "Monster damage: + ^ff0000[ 200% ]^000000";
-					mes "Monster takes less damage: + ^ff0000[ 40% ]^000000";
-					mes "Monster EXP reward: + ^ff0000[ 200% ]^000000";
-					mes ""+.@md_name$ +" Torment Points: + ^ff0000[ 160 ]^000000";
-					mes "^ff0000-----------------------------------------------------^000000";
-					close;			
-				case 4:
-					close;
+				switch(select("Enter the "+.@md_name$+":Return to Alberta:Cancel")) {
+					case 1:
+						callsub L_Enter,0,1,1;
+					case 2:
+						mes "I will move you to Alberta.";
+						close2;
+						warp "alberta",223,36;
+						end;
+					case 3:
+						end;
 				}
-			}
-			else {
+			case 0:
+			case 1:
 				set .@dun_lim_time,etower_timer+604800; // 1 week
 				// set .@dun_lim_time2,etower_timer+14400; // 4 hours
 				set .@dun_cur_time,gettimetick(2);
@@ -447,13 +379,12 @@ e_tower,81,105,0	script	Tower Protection Stone	406,{
 				close2;
 				warp "alberta",223,36;
 				end;
-			}
-		case 2:
-			set etower_timer,0;
-			erasequest 60200;
-			erasequest 60201;
-			mes "^0000ffThe records and after effects related to the Endless Tower have been removed. You can generate and enter the Endless Tower again.^000000";
-			close;
+			case 2:
+				set etower_timer,0;
+				erasequest 60200;
+				erasequest 60201;
+				mes "^0000ffThe records and after effects related to the Endless Tower have been removed. You can generate and enter the Endless Tower again.^000000";
+				close;
 		}
 
 L_Enter:
