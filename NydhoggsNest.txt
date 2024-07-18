@@ -26,6 +26,7 @@
 //= 2.2 Added Emistry's Multi-Currency Shop. [Louis T Steinhil]
 //= 2.3 Added Items to Multi-Currency Shop. [Louis T Steinhil]
 //= 2.4 Added Alias names to monsters. [Louis T Steinhil]
+//= 2.5 Added a function settings for easy access of variables. [Louis T Steinhil]
 //============================================================ 
 
 nyd_dun02,100,201,3	script	Yggdrasil Gatekeeper	111,8,8,{
@@ -117,10 +118,12 @@ nyd_dun02,100,201,3	script	Yggdrasil Gatekeeper	111,8,8,{
 //============================================================
 
 		set .@party_id,getcharid(1);
+		getpartymember .@party_id, 1;
+		set .@online_members_count, $@partymembercount;
 		set .@md_name$,"Nidhoggur's Nest";
-
 		set .@ins_nyd_check,checkquest(3135,PLAYTIME); // 3 Day cooldown
 		set .@ins_nyd_check2,checkquest(3136,PLAYTIME); // 4 Hour play limit
+		callfunc "F_Nyd_Settings";
 
 		mes "As I put my hands on the stone gate, a voice sounded from the depth of my heart.";
 		next;
@@ -136,180 +139,132 @@ nyd_dun02,100,201,3	script	Yggdrasil Gatekeeper	111,8,8,{
 				mes "And only 1 representative of you needs to talk to me, so don't annoy me...";
 				close;
 			}
-			switch(.@ins_nyd_check) {
-				case -1:
-					if (is_party_leader(.@party_id) == true) {
-						mes "[Yggdrasil Gatekeeper]";
-						mes "The loyal servants of the Guardian... what can I do for you?";
-						next;
-					switch(select(
-					( .@party_id && getpartyleader(.@party_id,2) && !instance_id(IM_PARTY) )? "Generate dungeon "+.@md_name$:"",
-					( .@party_id && instance_id(IM_PARTY) )?"Enter the dungeon":"",
-					"Difficulty Information",
-					"Cancel")) {
-						case 1:
-			// Difficulty 
-			//============================================================
-							.@level_mode = select(
-								"[ Level 50+ ] Normal", 
-								"[ Level 100+ ] Veteran", 
-								"[ Level 150+ ] Nightmare",
-								"[ Level 200+ ] Hell",
-								"[ Level 240+ ] ^ff0000Torment^000000"
-							);
-							$NYDMODE[getcharid(1)] = .@level_mode;
-							setarray .@modes$[1], "Normal Mode", "Veteran Mode", "Nightmare Mode", "Hell Mode", "Torment Mode";
-							set .@required_level, 0;
+				if (is_party_leader(.@party_id) == true) {
+					mes "[Yggdrasil Gatekeeper]";
+					mes "The loyal servants of the Guardian... what can I do for you?";
+					next;
+				switch(select(
+				( .@party_id && getpartyleader(.@party_id,2) && !instance_id(IM_PARTY) )? "Generate dungeon "+.@md_name$:"",
+				( .@party_id && instance_id(IM_PARTY) )?"Enter the dungeon":"",
+				"Difficulty Information",
+				"Cancel")) {
+					case 1:
+		// Difficulty 
+		//============================================================
+		
+						.@level_mode = select(
+							"[ Level 50+ ] Normal", 
+							"[ Level 100+ ] Veteran", 
+							"[ Level 150+ ] Nightmare",
+							"[ Level 200+ ] Hell",
+							"[ Level 240+ ] ^ff0000Torment^000000"
+						);
+						$NYDMODE[getcharid(1)] = .@level_mode;
+						set .@required_level, 0;
 
-							if (.@level_mode == 1) { .@required_level = 70; }
-							else if (.@level_mode == 2) { .@required_level = 100; }
-							else if (.@level_mode == 3) { .@required_level = 150; }
-							else if (.@level_mode == 4) { .@required_level = 200; }
-							else if (.@level_mode == 5) { .@required_level = 240; }
+						if (.@level_mode == 1) { .@required_level = 50; }
+						else if (.@level_mode == 2) { .@required_level = 100; }
+						else if (.@level_mode == 3) { .@required_level = 150; }
+						else if (.@level_mode == 4) { .@required_level = 200; }
+						else if (.@level_mode == 5) { .@required_level = 260; }
 
-							if (!instance_check_party(getcharid(1),1,.@required_level, 260)) {
-								mes "All party members need to be at least Level " + .@required_level + " to enter."; 
-								close;				
-							} 
-							
-							mes "Your party meets the Memorial Dungeon requirements.",
-							.@modez$ = .@modes$[.@level_mode];				
-							announce "The party [ " + getpartyname(.@party_id) + " ] has registered "+.@md_name$+" on " + .@modez$ + ".", bc_all;					
-								
-			//=============================================================			
-							if (instance_create(.@md_name$) < 0) {
-								mes "[Yggdrasil Gatekeeper]";
-								mes "The Guardian seems to wish to be alone. I will go in and check, please wait out here.";
-								close;
-							}
-							mes "[Yggdrasil Gatekeeper]";
-							mes "I've recorded your request, are you ready to go inside?";
-							next;
-							mes "[Yggdrasil Gatekeeper]";
-							mes "If you are ready, I will allow you to enter.";
-							close;
-						case 2:
-							goto L_Enter;
-						case 3:
-							mes "[ Difficulty Information ]";
-							mes "^ff0000-----------------------------------------------------^000000";
-							mes "Difficulty Level: ^ff0000[ Easy ]^000000";
-							mes "Monster HP: ^ff0000[ + 0% ]^000000";
-							mes "Monster damage: + ^ff0000[ 0% ]^000000";
-							mes "Monster takes less damage: + ^ff0000[ 0% ]^000000";
-							mes "Monster EXP reward: + ^ff0000[ 0% ]^000000";
-							mes ""+.@md_name$+" Easy Points: + ^ff0000[ 10 ]^000000";
-							mes "^ff0000-----------------------------------------------------^000000";
-							next;
-							mes "[ Difficulty Information ]";
-							mes "^ff0000-----------------------------------------------------^000000";
-							mes "Difficulty Level: ^ff0000[ Veteran ]^000000";
-							mes "Monster HP: ^ff0000[ + 50% ]^000000";
-							mes "Monster damage: + ^ff0000[ 50% ]^000000";
-							mes "Monster takes less damage: + ^ff0000[ 10% ]^000000";
-							mes "Monster EXP reward: + ^ff0000[ 50% ]^000000";
-							mes ""+.@md_name$+" Veteran Points: + ^ff0000[ 20 ]^000000";
-							mes "^ff0000-----------------------------------------------------^000000";
-							next;
-							mes "[ Difficulty Information ]";
-							mes "^ff0000-----------------------------------------------------^000000";
-							mes "Difficulty Level: ^ff0000[ Nightmare ]^000000";
-							mes "Monster HP: ^ff0000[ + 100% ]^000000";
-							mes "Monster damage: + ^ff0000[ 100% ]^000000";
-							mes "Monster takes less damage: + ^ff0000[ 20% ]^000000";
-							mes "Monster EXP reward: + ^ff0000[ 100% ]^000000";
-							mes ""+.@md_name$+" Nightmare Points: + ^ff0000[ 40 ]^000000";
-							mes "^ff0000-----------------------------------------------------^000000";
-							next;
-							mes "[ Difficulty Information ]";
-							mes "^ff0000-----------------------------------------------------^000000";
-							mes "Difficulty Level: ^ff0000[ Hell ]^000000";
-							mes "Monster HP: ^ff0000[ + 150% ]^000000";
-							mes "Monster damage: + ^ff0000[ 150% ]^000000";
-							mes "Monster takes less damage: + ^ff0000[ 30% ]^000000";
-							mes "Monster EXP reward: + ^ff0000[ 150% ]^000000";
-							mes ""+.@md_name$+" Hell Points: + ^ff0000[ 80 ]^000000";
-							mes "^ff0000-----------------------------------------------------^000000";
-							next;
-							mes "[ Difficulty Information ]";
-							mes "^ff0000-----------------------------------------------------^000000";
-							mes "Difficulty Level: ^ff0000[ Torment ]^000000";
-							mes "Monster HP: ^ff0000[ + 200% ]^000000";
-							mes "Monster damage: + ^ff0000[ 200% ]^000000";
-							mes "Monster takes less damage: + ^ff0000[ 40% ]^000000";
-							mes "Monster EXP reward: + ^ff0000[ 200% ]^000000";
-							mes ""+.@md_name$+" Torment Points: + ^ff0000[ 160 ]^000000";
-							mes "^ff0000-----------------------------------------------------^000000";
+						if (!instance_check_party(getcharid(1), .@online_members_count, .@required_level, 260)) {
+							mes "All party members need to be at least Level " + .@required_level + " to enter."; 
 							close;				
-						case 4:
+						} 
+						
+						mes "Your party meets the Memorial Dungeon requirements.";				
+						announce "The party [ " + getpartyname(.@party_id) + " ] has registered "+.@md_name$+" on " + $@difficulty_mode$[.@level_mode] + ".", bc_all;					
+							
+		//=============================================================			
+						if (instance_create(.@md_name$) < 0) {
+							mes "[Yggdrasil Gatekeeper]";
+							mes "The Guardian seems to wish to be alone. I will go in and check, please wait out here.";
 							close;
 						}
-					}
-				case 0:
-				case 1:
-					if (.@ins_nyd_check2 < 2 && getcharid(1) == .@party_id) {
-						mes "If you have the dungeon generated already, you can enter it. ";
+						mes "[Yggdrasil Gatekeeper]";
+						mes "I've recorded your request, are you ready to go inside?";
 						next;
-					switch(select("Enter the "+.@md_name$+":Difficulty Information:Cancel")) {
-						case 1:
-							callsub L_Enter,0,0;
-						case 2:
-							mes "[ Difficulty Information ]";
-							mes "^ff0000-----------------------------------------------------^000000";
-							mes "Difficulty Level: ^ff0000[ Easy ]^000000";
-							mes "Monster HP: ^ff0000[ + 0% ]^000000";
-							mes "Monster damage: + ^ff0000[ 0% ]^000000";
-							mes "Monster takes less damage: + ^ff0000[ 0% ]^000000";
-							mes "Monster EXP reward: + ^ff0000[ 0% ]^000000";
-							mes ""+.@md_name$ +" Easy Points: + ^ff0000[ 10 ]^000000";
-							mes "^ff0000-----------------------------------------------------^000000";
-							next;
-							mes "[ Difficulty Information ]";
-							mes "^ff0000-----------------------------------------------------^000000";
-							mes "Difficulty Level: ^ff0000[ Veteran ]^000000";
-							mes "Monster HP: ^ff0000[ + 50% ]^000000";
-							mes "Monster damage: + ^ff0000[ 50% ]^000000";
-							mes "Monster takes less damage: + ^ff0000[ 10% ]^000000";
-							mes "Monster EXP reward: + ^ff0000[ 50% ]^000000";
-							mes ""+.@md_name$ +" Veteran Points: + ^ff0000[ 20 ]^000000";
-							mes "^ff0000-----------------------------------------------------^000000";
-							next;
-							mes "[ Difficulty Information ]";
-							mes "^ff0000-----------------------------------------------------^000000";
-							mes "Difficulty Level: ^ff0000[ Nightmare ]^000000";
-							mes "Monster HP: ^ff0000[ + 100% ]^000000";
-							mes "Monster damage: + ^ff0000[ 100% ]^000000";
-							mes "Monster takes less damage: + ^ff0000[ 20% ]^000000";
-							mes "Monster EXP reward: + ^ff0000[ 100% ]^000000";
-							mes ""+.@md_name$ +" Nightmare Points: + ^ff0000[ 40 ]^000000";
-							mes "^ff0000-----------------------------------------------------^000000";
-							next;
-							mes "[ Difficulty Information ]";
-							mes "^ff0000-----------------------------------------------------^000000";
-							mes "Difficulty Level: ^ff0000[ Hell ]^000000";
-							mes "Monster HP: ^ff0000[ + 150% ]^000000";
-							mes "Monster damage: + ^ff0000[ 150% ]^000000";
-							mes "Monster takes less damage: + ^ff0000[ 30% ]^000000";
-							mes "Monster EXP reward: + ^ff0000[ 150% ]^000000";
-							mes ""+.@md_name$ +" Hell Points: + ^ff0000[ 80 ]^000000";
-							mes "^ff0000-----------------------------------------------------^000000";
-							next;
-							mes "[ Difficulty Information ]";
-							mes "^ff0000-----------------------------------------------------^000000";
-							mes "Difficulty Level: ^ff0000[ Torment ]^000000";
-							mes "Monster HP: ^ff0000[ + 200% ]^000000";
-							mes "Monster damage: + ^ff0000[ 200% ]^000000";
-							mes "Monster takes less damage: + ^ff0000[ 40% ]^000000";
-							mes "Monster EXP reward: + ^ff0000[ 200% ]^000000";
-							mes ""+.@md_name$ +" Torment Points: + ^ff0000[ 160 ]^000000";
-							mes "^ff0000-----------------------------------------------------^000000";
-							close;			
-						case 3:
-							close;
-						}
-					}				
-				
-			}
+						mes "[Yggdrasil Gatekeeper]";
+						mes "If you are ready, I will allow you to enter.";
+						close;
+					case 2:
+						goto L_Enter;
+					case 3:
+						mes "[ Difficulty Information ]";
+						mes "^ff0000-----------------------------------------------------^000000";
+						mes "Difficulty Level: ^ff0000[ Easy ]^000000";
+						mes "Monster max hp: + ^ff0000[ " + $@easy_mode_variables[0] + "% ]^000000";
+						mes "Monster damage: + ^ff0000[ " + $@easy_mode_variables[1] + "% ]^000000";
+						mes "Monster takes less damage: ^ff0000[ " + $@easy_mode_variables[2] + "% ]^000000";
+						mes "Monster def: + ^ff0000[ " + $@easy_mode_variables[3] + "% ]^000000";
+						mes "Monster mdef: + ^ff0000[ " + $@easy_mode_variables[4] + "% ]^000000";
+						mes "Monster hit: + ^ff0000[ " + $@easy_mode_variables[5] + "% ]^000000";
+						mes "Monster flee: + ^ff0000[ " + $@easy_mode_variables[6] + "% ]^000000";
+						mes "Monster bonus exp reward: x ^ff0000[ " + $@bonus_exp[1] + " ]^000000";
+						mes ""+.@md_name$ +" Easy Points: + ^ff0000[ " + $@instance_points[1] + " ]^000000";
+						mes "^ff0000-----------------------------------------------------^000000";
+						next;
+						mes "[ Difficulty Information ]";
+						mes "^ff0000-----------------------------------------------------^000000";
+						mes "Difficulty Level: ^ff0000[ Veteran ]^000000";
+						mes "Monster max hp: + ^ff0000[ " + $@veteran_mode_variables[0] + "% ]^000000";
+						mes "Monster damage: + ^ff0000[ " + $@veteran_mode_variables[1] + "% ]^000000";
+						mes "Monster takes less damage: ^ff0000[ " + $@veteran_mode_variables[2] + "% ]^000000";
+						mes "Monster def: + ^ff0000[ " + $@veteran_mode_variables[3] + "% ]^000000";
+						mes "Monster mdef: + ^ff0000[ " + $@veteran_mode_variables[4] + "% ]^000000";
+						mes "Monster hit: + ^ff0000[ " + $@veteran_mode_variables[5] + "% ]^000000";
+						mes "Monster flee: + ^ff0000[ " + $@veteran_mode_variables[6] + "% ]^000000";
+						mes "Monster bonus exp reward: x ^ff0000[ " + $@bonus_exp[2] + " ]^000000";
+						mes ""+.@md_name$ +" Veteran Points: + ^ff0000[ " + $@instance_points[2] + " ]^000000";
+						mes "^ff0000-----------------------------------------------------^000000";
+						next;
+						mes "[ Difficulty Information ]";
+						mes "^ff0000-----------------------------------------------------^000000";
+						mes "Difficulty Level: ^ff0000[ Nightmare ]^000000";
+						mes "Monster max hp: + ^ff0000[ " + $@nightmare_mode_variables[0] + "% ]^000000";
+						mes "Monster damage: + ^ff0000[ " + $@nightmare_mode_variables[1] + "% ]^000000";
+						mes "Monster takes less damage: ^ff0000[ " + $@nightmare_mode_variables[2] + "% ]^000000";
+						mes "Monster def: + ^ff0000[ " + $@nightmare_mode_variables[3] + "% ]^000000";
+						mes "Monster mdef: + ^ff0000[ " + $@nightmare_mode_variables[4] + "% ]^000000";
+						mes "Monster hit: + ^ff0000[ " + $@nightmare_mode_variables[5] + "% ]^000000";
+						mes "Monster flee: + ^ff0000[ " + $@nightmare_mode_variables[6] + "% ]^000000";
+						mes "Monster bonus exp reward: x ^ff0000[ " + $@bonus_exp[3] + " ]^000000";
+						mes ""+.@md_name$ +" Nightmare Points: + ^ff0000[ " + $@instance_points[3] + " ]^000000";
+						mes "^ff0000-----------------------------------------------------^000000";
+						next;
+						mes "[ Difficulty Information ]";
+						mes "^ff0000-----------------------------------------------------^000000";
+						mes "Difficulty Level: ^ff0000[ Hell ]^000000";
+						mes "Monster max hp: + ^ff0000[ " + $@hell_mode_variables[0] + "% ]^000000";
+						mes "Monster damage: + ^ff0000[ " + $@hell_mode_variables[1] + "% ]^000000";
+						mes "Monster takes less damage: ^ff0000[ " + $@hell_mode_variables[2] + "% ]^000000";
+						mes "Monster def: + ^ff0000[ " + $@hell_mode_variables[3] + "% ]^000000";
+						mes "Monster mdef: + ^ff0000[ " + $@hell_mode_variables[4] + "% ]^000000";
+						mes "Monster hit: + ^ff0000[ " + $@hell_mode_variables[5] + "% ]^000000";
+						mes "Monster flee: + ^ff0000[ " + $@hell_mode_variables[6] + "% ]^000000";
+						mes "Monster bonus exp reward: x ^ff0000[ " + $@bonus_exp[4] + " ]^000000";
+						mes ""+.@md_name$ +" Hell Points: + ^ff0000[ " + $@instance_points[4] + " ]^000000";
+						mes "^ff0000-----------------------------------------------------^000000";
+						next;
+						mes "[ Difficulty Information ]";
+						mes "^ff0000-----------------------------------------------------^000000";
+						mes "Difficulty Level: ^ff0000[ Torment ]^000000";
+						mes "Monster max hp: + ^ff0000[ " + $@torment_mode_variables[0] + "% ]^000000";
+						mes "Monster damage: + ^ff0000[ " + $@torment_mode_variables[1] + "% ]^000000";
+						mes "Monster takes less damage: ^ff0000[ " + $@torment_mode_variables[2] + "% ]^000000";
+						mes "Monster def: + ^ff0000[ " + $@torment_mode_variables[3] + "% ]^000000";
+						mes "Monster mdef: + ^ff0000[ " + $@torment_mode_variables[4] + "% ]^000000";
+						mes "Monster hit: + ^ff0000[ " + $@torment_mode_variables[5] + "% ]^000000";
+						mes "Monster flee: + ^ff0000[ " + $@torment_mode_variables[6] + "% ]^000000";
+						mes "Monster bonus exp reward: x ^ff0000[ " + $@bonus_exp[5] + " ]^000000";
+						mes ""+.@md_name$ +" Torment Points: + ^ff0000[ " + $@instance_points[5] + " ]^000000";
+						mes "^ff0000-----------------------------------------------------^000000";
+						close;
+					case 4:
+						close;
+					}
+				}
 		mes "[Yggdrasil Gatekeeper]";
 		mes "If you have the dungeon generated already, you can enter it.";
 		next;
@@ -1850,318 +1805,7 @@ OnInstanceInit: // Temporary fix for @reloadscript.
 	set 'ins_nyd2,0;
 	end;
 }
--	script	Settings	-1,{
 
-	$Normal = 0;
-	$Veteran = 50;
-	$Nightmare = 100;
-	$Hell = 150;
-	$Torment = 200;
-	
-}
-// Difficulty Function
-//============================================================
-function	script	F_Nyd_Monster_Summon	{
-	.@map$ = getarg(0, "");
-	.@x1 = getarg(1, 0);
-	.@y1 = getarg(2, 0);
-	.@mob_name$ = getarg(3, "");
-	.@mob_id = getarg(4, 0);
-	.@amount = getarg(5, 0);
-	.@label$ = getarg(6, "");
-	
-	
-	switch('level_mode){
-		case 1://Normal
-			.@bonus_hp_rate += 0;
-			.@bonus_dmg_rate += 0;
-			.@bonus_damagetaken += 0;
-			.@bonus_def += 0;
-			.@bonus_mdef += 0;
-			.@bonus_hit += 0;			
-			.@bonus_flee += 0;
-			break;
-		case 2://Veteran
-			.@bonus_hp_rate += 50;
-			.@bonus_dmg_rate += 50;
-			.@bonus_damagetaken += -10;
-			.@bonus_def += 50;
-			.@bonus_mdef += 50;
-			.@bonus_hit += 50;			
-			.@bonus_flee += 50;		
-			break;
-		case 3://Nightmare
-			.@bonus_hp_rate += 100;
-			.@bonus_dmg_rate += 100;
-			.@bonus_damagetaken += -20;
-			.@bonus_def += 100;
-			.@bonus_mdef += 100;
-			.@bonus_hit += 100;			
-			.@bonus_flee += 100;					
-			break;
-		case 4://Hell
-			.@bonus_hp_rate += 150;
-			.@bonus_dmg_rate += 150;
-			.@bonus_damagetaken += -30;
-			.@bonus_def += 150;
-			.@bonus_mdef += 150;
-			.@bonus_hit += 150;			
-			.@bonus_flee += 150;			
-			break;
-		case 5://Torment
-			.@bonus_hp_rate += 200;
-			.@bonus_dmg_rate += 200;
-			.@bonus_damagetaken += -40;
-			.@bonus_def += 200;
-			.@bonus_mdef += 200;
-			.@bonus_hit += 200;			
-			.@bonus_flee += 200;				
-			break;
-	}
-	deletearray $@mobid,getarraysize($@mobid);
-	monster .@map$, .@x1, .@y1, .@mob_name$, .@mob_id, .@amount, .@label$;
-	copyarray .@GID, $@mobid, getarraysize($@mobid);
-	if(!.@bonus_hp_rate&& !.@bonus_dmg_rate&& !.@bonus_damagetaken&& !.@bonus_def&& !.@bonus_mdef&& !.@bonus_hit&& !.@bonus_flee)
-		return;
-	getunitdata .@GID, .@ST;
-
-freeloop(1);
-	for (.@i = 0; .@i < getarraysize(.@GID); .@i++) {
-		if(.@bonus_hp_rate){
-			.@HP = .@ST[UMOB_MAXHP] + ((.@ST[UMOB_MAXHP] * .@bonus_hp_rate ) /100);			
-				setunitdata(.@GID[.@i], UMOB_MAXHP, .@HP);
-				setunitdata(.@GID[.@i], UMOB_HP, .@HP);
-		}
-		if(.@bonus_dmg_rate){
-			.@ATKMIN = .@ST[UMOB_ATKMIN] + ((.@ST[UMOB_ATKMIN] * .@bonus_dmg_rate) /100);
-			.@ATKMAX = .@ST[UMOB_ATKMAX] + ((.@ST[UMOB_ATKMAX] * .@bonus_dmg_rate) /100);
-			.@MATKMIN = .@ST[UMOB_MATKMIN] + ((.@ST[UMOB_MATKMIN] * .@bonus_dmg_rate) /100);
-			.@MATKMAX = .@ST[UMOB_MATKMAX] + ((.@ST[UMOB_MATKMAX] * .@bonus_dmg_rate) /100);
-				setunitdata(.@GID[.@i], UMOB_ATKMIN, .@ATKMIN);
-				setunitdata(.@GID[.@i], UMOB_ATKMAX, .@ATKMAX);
-				setunitdata(.@GID[.@i], UMOB_MATKMIN, .@MATKMIN);
-				setunitdata(.@GID[.@i], UMOB_MATKMAX, .@MATKMAX);
-		}
-		if(.@bonus_damagetaken){
-			.@DAMAGETAKEN = .@ST[UMOB_DAMAGETAKEN] + ((.@ST[UMOB_DAMAGETAKEN] * .@bonus_damagetaken) /100);
-				setunitdata(.@GID[.@i], UMOB_DAMAGETAKEN, .@DAMAGETAKEN);
-		}
-		if(.@bonus_def){
-			.@DEF = .@ST[UMOB_DEF] + ((.@ST[UMOB_DEF] * .@bonus_def) /100);	
-				setunitdata(.@GID[.@i], UMOB_DEF, .@DEF);
-		}	
-		if(.@bonus_mdef){
-			.@MDEF = .@ST[UMOB_MDEF] + ((.@ST[UMOB_MDEF] * .@bonus_mdef) /100);	
-				setunitdata(.@GID[.@i], UMOB_MDEF, .@MDEF);
-		}
-		if(.@bonus_hit){
-			.@HIT = .@ST[UMOB_HIT] + ((.@ST[UMOB_HIT] * .@bonus_hit) /100);	
-				setunitdata(.@GID[.@i], UMOB_HIT, .@HIT);
-		}		
-		if(.@bonus_flee){
-			.@FLEE = .@ST[UMOB_FLEE] + ((.@ST[UMOB_FLEE] * .@bonus_flee) /100);	
-				setunitdata(.@GID[.@i], UMOB_FLEE, .@FLEE);
-		}
-	}
-freeloop(0);
-return;
-}
-// Exp Reward Function
-//============================================================
-function	script	F_Nyd_Exp	{
-	setarray .@bonusExp[1],0,50,100,150,200;
-	'bonuzExp = .@bonusExp['level_mode];
-	set BaseExp, BaseExp + (getmonsterinfo(killedrid,MOB_BASEEXP) * 'bonuzExp);
-	set JobExp, JobExp + (getmonsterinfo(killedrid,MOB_JOBEXP) * 'bonuzExp);	
-return;
-}
-// Reward Function
-//============================================================
-function	script	F_Nyd_Reward	{
-	setarray .@md_points[1], 10, 20, 40, 80, 160;
-	setarray .@modes$[1], "Easy Mode", "Veteran Mode", "Nightmare Mode", "Hell Mode", "Torment Mode";
-	setarray .@var_names$[1], "NYD_EASY", "NYD_VETERAN", "NYD_NIGHTMARE", "NYD_HELL", "NYD_TORMENT";
-	
-	'md_points = .@md_points['level_mode];
-	'modez$ = .@modes$['level_mode];
-	'var_name$ = .@var_names$['level_mode];
-	'party_id = instance_live_info(ILI_OWNER);
-	
-	getpartymember 'party_id, 1;
-	getpartymember 'party_id, 2;
-	'map$ = instance_mapname("2@nyd");
-	
-	copyarray .@CID, $@partymembercid, $@partymembercount;
-	copyarray .@AID, $@partymemberaid, $@partymembercount;
-	for (.@i = 0; .@i < getarraysize(.@CID); .@i++) {
-		if (isloggedin(.@AID[.@i], .@CID[.@i])) {
-			if (strcharinfo(3, .@CID[.@i]) == 'map$) {
-				setd("#" + 'var_name$, getd("#" + 'var_name$) + 'md_points);
-				announce "The party [ " + getpartyname('party_id) + " ] has defeated Nydhoggs Nest on " + 'modez$ + ".", bc_all;
-				message strcharinfo(0, .@CID[.@i]), "You've been granted " + 'md_points + " " + 'var_name$ + ".";
-				message strcharinfo(0, .@CID[.@i]), "You now have " + getd("#" + 'var_name$) + " " + 'var_name$ + ".";
-			}
-		}
-	}
-return;
-}
-// Core Functions
-//============================================================
-function	script	F_Nyd_Monster	{
-	setarray .@monster_alias$[1], "", "Veteran ", "Nightmare ", "Hellish ", "Tormented ";
-	'monster_alias$ = .@monster_alias$['level_mode];
-	
-	set .@level, getarg(0);
-	set .@map$, getarg(1);
-	set .@label$, getarg(2);
-
-	switch(.@level) {
-		case 1:
-			callfunc("F_Nyd_Monster_Summon", .@map$,220,250,"" + 'monster_alias$ + "Nidhoggur's Guardian#1",2020,1,.@label$);
-			callfunc("F_Nyd_Monster_Summon", .@map$,220,252,"" + 'monster_alias$ + "Nidhoggur's Guardian#2",2020,1,.@label$);
-			callfunc("F_Nyd_Monster_Summon", .@map$,240,270,"" + 'monster_alias$ + "Nidhoggur's Guardian#3",2020,1,.@label$);
-			callfunc("F_Nyd_Monster_Summon", .@map$,240,272,"" + 'monster_alias$ + "Nidhoggur's Guardian#4",2020,1,.@label$);
-			callfunc("F_Nyd_Monster_Summon", .@map$,200,200,"" + 'monster_alias$ + "Nidhoggur's Guardian#5",2020,1,.@label$);
-			callfunc("F_Nyd_Monster_Summon", .@map$,210,210,"" + 'monster_alias$ + "Nidhoggur's Guardian#6",2020,1,.@label$);
-			callfunc("F_Nyd_Monster_Summon", .@map$,225,265,"" + 'monster_alias$ + "Nidhoggur's Guardian#7",2021,1,.@label$);
-			callfunc("F_Nyd_Monster_Summon", .@map$,225,270,"" + 'monster_alias$ + "Nidhoggur's Guardian#8",2021,1,.@label$);
-			callfunc("F_Nyd_Monster_Summon", .@map$,245,235,"" + 'monster_alias$ + "Nidhoggur's Guardian#9",2021,1,.@label$);
-			callfunc("F_Nyd_Monster_Summon", .@map$,255,255,"" + 'monster_alias$ + "Nidhoggur's Guardian#10",2021,1,.@label$);
-			callfunc("F_Nyd_Monster_Summon", .@map$,225,245,"" + 'monster_alias$ + "Nidhoggur's Guardian#11",2021,1,.@label$);
-			callfunc("F_Nyd_Monster_Summon", .@map$,230,280,"" + 'monster_alias$ + "Nidhoggur's Guardian#12",2021,1,.@label$);
-			break;
-		case 2:
-			freeloop(1);
-			for(set .@i, 0; .@i < 40; .@i++){		
-				callfunc("F_Nyd_Monster_Summon", .@map$,0,0,"" + 'monster_alias$ + "Ancient Tree",2019,1,.@label$);				
-			}
-			freeloop(0);
-			break;
-		case 3:
-			freeloop(1);
-			for(set .@i, 0; .@i < 40; .@i++){		
-				callfunc("F_Nyd_Monster_Summon", .@map$,0,0,"" + 'monster_alias$ + "Rhyncho",2020,1,.@label$);				
-			}
-			freeloop(0);
-			break;
-		case 4:
-			freeloop(1);
-			for(set .@i, 0; .@i < 40; .@i++){		
-				callfunc("F_Nyd_Monster_Summon", .@map$,0,0,"" + 'monster_alias$ + "Phylla",2021,1,.@label$);				
-			}
-			freeloop(0);
-			break;
-		case 5:
-			freeloop(1);
-			for(set .@i, 0; .@i < 40; .@i++){		
-				callfunc("F_Nyd_Monster_Summon", .@map$,0,0,"" + 'monster_alias$ + "Aqua Elemental",2016,1,.@label$);				
-			}
-			freeloop(0);
-			break;
-		case 6:
-			freeloop(1);
-			for(set .@i, 0; .@i < 40; .@i++){		
-				callfunc("F_Nyd_Monster_Summon", .@map$,0,0,"" + 'monster_alias$ + "Dark Pinguicula",2015,1,.@label$);				
-			}
-			freeloop(0);
-			break;
-		case 7:	
-			callfunc("F_Nyd_Monster_Summon", .@map$,0,0,"" + 'monster_alias$ + "Ancient Tree",2019,1,.@label$);				
-			break;
-		case 8:	
-			callfunc("F_Nyd_Monster_Summon", .@map$,0,0,"" + 'monster_alias$ + "Rhyncho",2020,1,.@label$);				
-			break;
-		case 9:		
-			callfunc("F_Nyd_Monster_Summon", .@map$,0,0,"" + 'monster_alias$ + "Phylla",2021,1,.@label$);				
-			break;
-		case 10:		
-			callfunc("F_Nyd_Monster_Summon", .@map$,0,0,"" + 'monster_alias$ + "Aqua Elemental",2016,1,.@label$);				
-			break;
-		case 11:		
-			callfunc("F_Nyd_Monster_Summon", .@map$,0,0,"" + 'monster_alias$ + "Dark Pinguicula",2015,1,.@label$);				
-			break;
-		case 12:
-			callfunc("F_Nyd_Monster_Summon", .@map$,199,327,"" + 'monster_alias$ + "Nidhoggur's Shadow",2022,1,.@label$);
-			break;
-		case 13:
-			callfunc("F_Nyd_Monster_Summon", .@map$,120,285,"" + 'monster_alias$ + "Nidhoggur's Guardian#1",2020,1,.@label$);	
-			callfunc("F_Nyd_Monster_Summon", .@map$,119,286,"" + 'monster_alias$ + "Nidhoggur's Guardian#2",2020,1,.@label$);
-			callfunc("F_Nyd_Monster_Summon", .@map$,120,270,"" + 'monster_alias$ + "Nidhoggur's Guardian#3",2020,1,.@label$);
-			callfunc("F_Nyd_Monster_Summon", .@map$,119,269,"" + 'monster_alias$ + "Nidhoggur's Guardian#4",2021,1,.@label$);
-			callfunc("F_Nyd_Monster_Summon", .@map$,118,270,"" + 'monster_alias$ + "Nidhoggur's Guardian#5",2021,1,.@label$);
-			break;
-		case 14:
-			callfunc("F_Nyd_Monster_Summon", .@map$,120,380,"" + 'monster_alias$ + "Nidhoggur's Guardian#1",2020,1,.@label$);	
-			callfunc("F_Nyd_Monster_Summon", .@map$,119,381,"" + 'monster_alias$ + "Nidhoggur's Guardian#2",2020,1,.@label$);
-			callfunc("F_Nyd_Monster_Summon", .@map$,120,367,"" + 'monster_alias$ + "Nidhoggur's Guardian#3",2020,1,.@label$);
-			callfunc("F_Nyd_Monster_Summon", .@map$,119,366,"" + 'monster_alias$ + "Nidhoggur's Guardian#4",2021,1,.@label$);
-			callfunc("F_Nyd_Monster_Summon", .@map$,118,365,"" + 'monster_alias$ + "Nidhoggur's Guardian#5",2021,1,.@label$);
-			break;
-		case 15:
-			callfunc("F_Nyd_Monster_Summon", .@map$,282,284,"" + 'monster_alias$ + "Nidhoggur's Guardian#1",2020,1,.@label$);	
-			callfunc("F_Nyd_Monster_Summon", .@map$,283,283,"" + 'monster_alias$ + "Nidhoggur's Guardian#2",2020,1,.@label$);
-			callfunc("F_Nyd_Monster_Summon", .@map$,280,275,"" + 'monster_alias$ + "Nidhoggur's Guardian#3",2020,1,.@label$);
-			callfunc("F_Nyd_Monster_Summon", .@map$,281,276,"" + 'monster_alias$ + "Nidhoggur's Guardian#4",2021,1,.@label$);
-			callfunc("F_Nyd_Monster_Summon", .@map$,281,277,"" + 'monster_alias$ + "Nidhoggur's Guardian#5",2021,1,.@label$);
-			break;
-		case 16:
-			callfunc("F_Nyd_Monster_Summon", .@map$,282,284,"" + 'monster_alias$ + "Nidhoggur's Guardian#1",2020,1,.@label$);	
-			callfunc("F_Nyd_Monster_Summon", .@map$,283,377,"" + 'monster_alias$ + "Nidhoggur's Guardian#2",2020,1,.@label$);
-			callfunc("F_Nyd_Monster_Summon", .@map$,280,368,"" + 'monster_alias$ + "Nidhoggur's Guardian#3",2020,1,.@label$);
-			callfunc("F_Nyd_Monster_Summon", .@map$,281,368,"" + 'monster_alias$ + "Nidhoggur's Guardian#4",2021,1,.@label$);
-			callfunc("F_Nyd_Monster_Summon", .@map$,281,367,"" + 'monster_alias$ + "Nidhoggur's Guardian#5",2021,1,.@label$);
-			break;
-		case 17:
-			freeloop(1);
-			for(set .@i, 0; .@i < 20; .@i++){
-				callfunc("F_Nyd_Monster_Summon", .@map$,20,12,"" + 'monster_alias$ + "Rhyncho",2020,1,.@label$);	
-				callfunc("F_Nyd_Monster_Summon", .@map$,380,172,"" + 'monster_alias$ + "Rhyncho",2020,1,.@label$);
-			}	
-			freeloop(0);
-			break;
-		case 18:
-			freeloop(1);
-			for(set .@i, 0; .@i < 20; .@i++){
-				callfunc("F_Nyd_Monster_Summon", .@map$,20,12,"" + 'monster_alias$ + "Phylla",2021,1,.@label$);	
-				callfunc("F_Nyd_Monster_Summon", .@map$,380,172,"" + 'monster_alias$ + "Phylla",2021,1,.@label$);
-			}	
-			freeloop(0);
-			break;
-		case 19:
-			freeloop(1);
-			for(set .@i, 0; .@i < 20; .@i++){
-				callfunc("F_Nyd_Monster_Summon", .@map$,20,12,"" + 'monster_alias$ + "Dark Shadow",2023,1,.@label$);
-				callfunc("F_Nyd_Monster_Summon", .@map$,380,172,"" + 'monster_alias$ + "Dark Shadow",2023,1,.@label$);
-			}	
-			freeloop(0);
-			break;
-		case 20:
-			freeloop(1);
-			for(set .@i, 0; .@i < 20; .@i++){
-				callfunc("F_Nyd_Monster_Summon", .@map$,20,12,"" + 'monster_alias$ + "Dark Pinguicula",2015,1,.@label$);
-				callfunc("F_Nyd_Monster_Summon", .@map$,380,172,"" + 'monster_alias$ + "Dark Pinguicula",2015,1,.@label$);
-			}	
-			freeloop(0);
-			break;
-		case 21:
-			callfunc("F_Nyd_Monster_Summon", .@map$,20,12,"" + 'monster_alias$ + "Rhyncho",2020,1,.@label$);	
-			callfunc("F_Nyd_Monster_Summon", .@map$,380,172,"" + 'monster_alias$ + "Rhyncho",2020,1,.@label$);
-			break;
-		case 22:
-			callfunc("F_Nyd_Monster_Summon", .@map$,20,12,"" + 'monster_alias$ + "Phylla",2021,1,.@label$);	
-			callfunc("F_Nyd_Monster_Summon", .@map$,380,172,"" + 'monster_alias$ + "Phylla",2021,1,.@label$);
-			break;
-		case 23:
-			callfunc("F_Nyd_Monster_Summon", .@map$,20,12,"" + 'monster_alias$ + "Dark Shadow",2023,1,.@label$);
-			callfunc("F_Nyd_Monster_Summon", .@map$,380,172,"" + 'monster_alias$ + "Dark Shadow",2023,1,.@label$);
-			break;
-		case 24:
-			callfunc("F_Nyd_Monster_Summon", .@map$,20,12,"" + 'monster_alias$ + "Dark Pinguicula",2015,1,.@label$);
-			callfunc("F_Nyd_Monster_Summon", .@map$,380,172,"" + 'monster_alias$ + "Dark Pinguicula",2015,1,.@label$);
-			break;			
-	}
-return;
-}
 1@nyd,1,1,0	script	nyd_call_mon_1	-1,{
 OnInstanceInit:	
 	enablenpc instance_npcname("nyd_call_mon_1");
@@ -2764,6 +2408,380 @@ OnTimer1740000:
 OnTimer1800000:
 	disablenpc "Purification Stone#nyd2";
 	end;
+}
+
+// Difficulty Function
+//============================================================
+function	script	F_Nyd_Monster_Summon	{
+	.@map$ = getarg(0, "");
+	.@x1 = getarg(1, 0);
+	.@y1 = getarg(2, 0);
+	.@mob_name$ = getarg(3, "");
+	.@mob_id = getarg(4, 0);
+	.@amount = getarg(5, 0);
+	.@label$ = getarg(6, "");
+	
+	
+	switch('level_mode){
+		case 1://Normal
+			.@bonus_hp_rate += $@easy_mode_variables[0];
+			.@bonus_dmg_rate += $@easy_mode_variables[1];
+			.@bonus_damagetaken += $@easy_mode_variables[2];
+			.@bonus_def += $@easy_mode_variables[3];
+			.@bonus_mdef += $@easy_mode_variables[4];
+			.@bonus_hit += $@easy_mode_variables[5];			
+			.@bonus_flee += $@easy_mode_variables[6];
+			break;
+		case 2://Veteran
+			.@bonus_hp_rate += $@veteran_mode_variables[0];
+			.@bonus_dmg_rate += $@veteran_mode_variables[1];
+			.@bonus_damagetaken += $@veteran_mode_variables[2];
+			.@bonus_def += $@veteran_mode_variables[3];
+			.@bonus_mdef += $@veteran_mode_variables[4];
+			.@bonus_hit += $@veteran_mode_variables[5];			
+			.@bonus_flee += $@veteran_mode_variables[6];		
+			break;
+		case 3://Nightmare
+			.@bonus_hp_rate += $@nightmare_mode_variables[0];
+			.@bonus_dmg_rate += $@nightmare_mode_variables[1];
+			.@bonus_damagetaken += $@nightmare_mode_variables[2];
+			.@bonus_def += $@nightmare_mode_variables[3];
+			.@bonus_mdef += $@nightmare_mode_variables[4];
+			.@bonus_hit += $@nightmare_mode_variables[5];			
+			.@bonus_flee += $@nightmare_mode_variables[6];					
+			break;
+		case 4://Hell
+			.@bonus_hp_rate += .@hell_mode_variables[0];
+			.@bonus_dmg_rate += .@hell_mode_variables[1];
+			.@bonus_damagetaken += .@hell_mode_variables[2];
+			.@bonus_def += .@hell_mode_variables[3];
+			.@bonus_mdef += .@hell_mode_variables[4];
+			.@bonus_hit += .@hell_mode_variables[5];			
+			.@bonus_flee += .@hell_mode_variables[6];			
+			break;
+		case 5://Torment
+			.@bonus_hp_rate += $@torment_mode_variables[0];
+			.@bonus_dmg_rate += $@torment_mode_variables[1];
+			.@bonus_damagetaken += $@torment_mode_variables[2];
+			.@bonus_def += $@torment_mode_variables[3];
+			.@bonus_mdef += $@torment_mode_variables[4];
+			.@bonus_hit += $@torment_mode_variables[5];			
+			.@bonus_flee += $@torment_mode_variables[6];				
+			break;
+	}
+	
+	deletearray $@mobid,getarraysize($@mobid);
+	monster .@map$, .@x1, .@y1, .@mob_name$, .@mob_id, .@amount, .@label$;
+	copyarray .@GID, $@mobid, getarraysize($@mobid);
+	getunitdata .@GID, .@ST;
+
+freeloop(1);
+	for (.@i = 0; .@i < getarraysize(.@GID); .@i++) {
+		if(.@bonus_hp_rate){
+			.@HP = .@ST[UMOB_MAXHP] + ((.@ST[UMOB_MAXHP] * .@bonus_hp_rate ) /100);			
+				setunitdata(.@GID[.@i], UMOB_MAXHP, .@HP);
+				setunitdata(.@GID[.@i], UMOB_HP, .@HP);
+		}
+		if(.@bonus_dmg_rate){
+			.@ATKMIN = .@ST[UMOB_ATKMIN] + ((.@ST[UMOB_ATKMIN] * .@bonus_dmg_rate) /100);
+			.@ATKMAX = .@ST[UMOB_ATKMAX] + ((.@ST[UMOB_ATKMAX] * .@bonus_dmg_rate) /100);
+			.@MATKMIN = .@ST[UMOB_MATKMIN] + ((.@ST[UMOB_MATKMIN] * .@bonus_dmg_rate) /100);
+			.@MATKMAX = .@ST[UMOB_MATKMAX] + ((.@ST[UMOB_MATKMAX] * .@bonus_dmg_rate) /100);
+				setunitdata(.@GID[.@i], UMOB_ATKMIN, .@ATKMIN);
+				setunitdata(.@GID[.@i], UMOB_ATKMAX, .@ATKMAX);
+				setunitdata(.@GID[.@i], UMOB_MATKMIN, .@MATKMIN);
+				setunitdata(.@GID[.@i], UMOB_MATKMAX, .@MATKMAX);
+		}
+		if(.@bonus_damagetaken){
+			.@DAMAGETAKEN = .@ST[UMOB_DAMAGETAKEN] + ((.@ST[UMOB_DAMAGETAKEN] * .@bonus_damagetaken) /100);
+				setunitdata(.@GID[.@i], UMOB_DAMAGETAKEN, .@DAMAGETAKEN);
+		}
+		if(.@bonus_def){
+			.@DEF = .@ST[UMOB_DEF] + ((.@ST[UMOB_DEF] * .@bonus_def) /100);	
+				setunitdata(.@GID[.@i], UMOB_DEF, .@DEF);
+		}	
+		if(.@bonus_mdef){
+			.@MDEF = .@ST[UMOB_MDEF] + ((.@ST[UMOB_MDEF] * .@bonus_mdef) /100);	
+				setunitdata(.@GID[.@i], UMOB_MDEF, .@MDEF);
+		}
+		if(.@bonus_hit){
+			.@HIT = .@ST[UMOB_HIT] + ((.@ST[UMOB_HIT] * .@bonus_hit) /100);	
+				setunitdata(.@GID[.@i], UMOB_HIT, .@HIT);
+		}		
+		if(.@bonus_flee){
+			.@FLEE = .@ST[UMOB_FLEE] + ((.@ST[UMOB_FLEE] * .@bonus_flee) /100);	
+				setunitdata(.@GID[.@i], UMOB_FLEE, .@FLEE);
+		}
+	}
+freeloop(0);
+return;
+}
+// Exp Reward Function
+//============================================================
+function	script	F_Nyd_Exp	{
+	'bonus_exp = $@bonus_exp['level_mode];
+	getexp (getmonsterinfo(killedrid,MOB_BASEEXP) * 'bonus_exp),(getmonsterinfo(killedrid,MOB_JOBEXP) * 'bonus_exp);	
+return;
+}
+// Reward Function
+//============================================================
+function	script	F_Nyd_Reward	{
+
+	'instance_points = $@instance_points['level_mode];
+	'difficulty_mode$ = $@difficulty_mode$['level_mode];
+	'var_name$ = $@var_names$['level_mode];
+	'party_id = instance_live_info(ILI_OWNER);
+	
+	getpartymember 'party_id, 1;
+	getpartymember 'party_id, 2;
+	'map$ = instance_mapname("2@nyd");
+	
+	copyarray .@CID, $@partymembercid, $@partymembercount;
+	copyarray .@AID, $@partymemberaid, $@partymembercount;
+	for (.@i = 0; .@i < getarraysize(.@CID); .@i++) {
+		if (isloggedin(.@AID[.@i], .@CID[.@i])) {
+			if (strcharinfo(3, .@CID[.@i]) == 'map$) {
+				setd("#" + 'var_name$, getd("#" + 'var_name$) + 'instance_points);
+				announce "The party [ " + getpartyname('party_id) + " ] has defeated Nydhoggs Nest on " + 'difficulty_mode$ + ".", bc_all;
+				message strcharinfo(0, .@CID[.@i]), "You've been granted " + 'instance_points + " " + 'var_name$ + ".";
+				message strcharinfo(0, .@CID[.@i]), "You now have " + getd("#" + 'var_name$) + " " + 'var_name$ + ".";
+			}
+		}
+	}
+return;
+}
+// Core Functions
+//============================================================
+function	script	F_Nyd_Monster	{
+
+	'monster_alias$ = $@monster_alias$['level_mode];
+	
+	set .@level, getarg(0);
+	set .@map$, getarg(1);
+	set .@label$, getarg(2);
+
+	switch(.@level) {
+		case 1:
+			callfunc("F_Nyd_Monster_Summon", .@map$,220,250,"" + 'monster_alias$ + "Nidhoggur's Guardian#1",2020,1,.@label$);
+			callfunc("F_Nyd_Monster_Summon", .@map$,220,252,"" + 'monster_alias$ + "Nidhoggur's Guardian#2",2020,1,.@label$);
+			callfunc("F_Nyd_Monster_Summon", .@map$,240,270,"" + 'monster_alias$ + "Nidhoggur's Guardian#3",2020,1,.@label$);
+			callfunc("F_Nyd_Monster_Summon", .@map$,240,272,"" + 'monster_alias$ + "Nidhoggur's Guardian#4",2020,1,.@label$);
+			callfunc("F_Nyd_Monster_Summon", .@map$,200,200,"" + 'monster_alias$ + "Nidhoggur's Guardian#5",2020,1,.@label$);
+			callfunc("F_Nyd_Monster_Summon", .@map$,210,210,"" + 'monster_alias$ + "Nidhoggur's Guardian#6",2020,1,.@label$);
+			callfunc("F_Nyd_Monster_Summon", .@map$,225,265,"" + 'monster_alias$ + "Nidhoggur's Guardian#7",2021,1,.@label$);
+			callfunc("F_Nyd_Monster_Summon", .@map$,225,270,"" + 'monster_alias$ + "Nidhoggur's Guardian#8",2021,1,.@label$);
+			callfunc("F_Nyd_Monster_Summon", .@map$,245,235,"" + 'monster_alias$ + "Nidhoggur's Guardian#9",2021,1,.@label$);
+			callfunc("F_Nyd_Monster_Summon", .@map$,255,255,"" + 'monster_alias$ + "Nidhoggur's Guardian#10",2021,1,.@label$);
+			callfunc("F_Nyd_Monster_Summon", .@map$,225,245,"" + 'monster_alias$ + "Nidhoggur's Guardian#11",2021,1,.@label$);
+			callfunc("F_Nyd_Monster_Summon", .@map$,230,280,"" + 'monster_alias$ + "Nidhoggur's Guardian#12",2021,1,.@label$);
+			break;
+		case 2:
+			freeloop(1);
+			for(set .@i, 0; .@i < 40; .@i++){		
+				callfunc("F_Nyd_Monster_Summon", .@map$,0,0,"" + 'monster_alias$ + "Ancient Tree",2019,1,.@label$);				
+			}
+			freeloop(0);
+			break;
+		case 3:
+			freeloop(1);
+			for(set .@i, 0; .@i < 40; .@i++){		
+				callfunc("F_Nyd_Monster_Summon", .@map$,0,0,"" + 'monster_alias$ + "Rhyncho",2020,1,.@label$);				
+			}
+			freeloop(0);
+			break;
+		case 4:
+			freeloop(1);
+			for(set .@i, 0; .@i < 40; .@i++){		
+				callfunc("F_Nyd_Monster_Summon", .@map$,0,0,"" + 'monster_alias$ + "Phylla",2021,1,.@label$);				
+			}
+			freeloop(0);
+			break;
+		case 5:
+			freeloop(1);
+			for(set .@i, 0; .@i < 40; .@i++){		
+				callfunc("F_Nyd_Monster_Summon", .@map$,0,0,"" + 'monster_alias$ + "Aqua Elemental",2016,1,.@label$);				
+			}
+			freeloop(0);
+			break;
+		case 6:
+			freeloop(1);
+			for(set .@i, 0; .@i < 40; .@i++){		
+				callfunc("F_Nyd_Monster_Summon", .@map$,0,0,"" + 'monster_alias$ + "Dark Pinguicula",2015,1,.@label$);				
+			}
+			freeloop(0);
+			break;
+		case 7:	
+			callfunc("F_Nyd_Monster_Summon", .@map$,0,0,"" + 'monster_alias$ + "Ancient Tree",2019,1,.@label$);				
+			break;
+		case 8:	
+			callfunc("F_Nyd_Monster_Summon", .@map$,0,0,"" + 'monster_alias$ + "Rhyncho",2020,1,.@label$);				
+			break;
+		case 9:		
+			callfunc("F_Nyd_Monster_Summon", .@map$,0,0,"" + 'monster_alias$ + "Phylla",2021,1,.@label$);				
+			break;
+		case 10:		
+			callfunc("F_Nyd_Monster_Summon", .@map$,0,0,"" + 'monster_alias$ + "Aqua Elemental",2016,1,.@label$);				
+			break;
+		case 11:		
+			callfunc("F_Nyd_Monster_Summon", .@map$,0,0,"" + 'monster_alias$ + "Dark Pinguicula",2015,1,.@label$);				
+			break;
+		case 12:
+			callfunc("F_Nyd_Monster_Summon", .@map$,199,327,"" + 'monster_alias$ + "Nidhoggur's Shadow",2022,1,.@label$);
+			break;
+		case 13:
+			callfunc("F_Nyd_Monster_Summon", .@map$,120,285,"" + 'monster_alias$ + "Nidhoggur's Guardian#1",2020,1,.@label$);	
+			callfunc("F_Nyd_Monster_Summon", .@map$,119,286,"" + 'monster_alias$ + "Nidhoggur's Guardian#2",2020,1,.@label$);
+			callfunc("F_Nyd_Monster_Summon", .@map$,120,270,"" + 'monster_alias$ + "Nidhoggur's Guardian#3",2020,1,.@label$);
+			callfunc("F_Nyd_Monster_Summon", .@map$,119,269,"" + 'monster_alias$ + "Nidhoggur's Guardian#4",2021,1,.@label$);
+			callfunc("F_Nyd_Monster_Summon", .@map$,118,270,"" + 'monster_alias$ + "Nidhoggur's Guardian#5",2021,1,.@label$);
+			break;
+		case 14:
+			callfunc("F_Nyd_Monster_Summon", .@map$,120,380,"" + 'monster_alias$ + "Nidhoggur's Guardian#1",2020,1,.@label$);	
+			callfunc("F_Nyd_Monster_Summon", .@map$,119,381,"" + 'monster_alias$ + "Nidhoggur's Guardian#2",2020,1,.@label$);
+			callfunc("F_Nyd_Monster_Summon", .@map$,120,367,"" + 'monster_alias$ + "Nidhoggur's Guardian#3",2020,1,.@label$);
+			callfunc("F_Nyd_Monster_Summon", .@map$,119,366,"" + 'monster_alias$ + "Nidhoggur's Guardian#4",2021,1,.@label$);
+			callfunc("F_Nyd_Monster_Summon", .@map$,118,365,"" + 'monster_alias$ + "Nidhoggur's Guardian#5",2021,1,.@label$);
+			break;
+		case 15:
+			callfunc("F_Nyd_Monster_Summon", .@map$,282,284,"" + 'monster_alias$ + "Nidhoggur's Guardian#1",2020,1,.@label$);	
+			callfunc("F_Nyd_Monster_Summon", .@map$,283,283,"" + 'monster_alias$ + "Nidhoggur's Guardian#2",2020,1,.@label$);
+			callfunc("F_Nyd_Monster_Summon", .@map$,280,275,"" + 'monster_alias$ + "Nidhoggur's Guardian#3",2020,1,.@label$);
+			callfunc("F_Nyd_Monster_Summon", .@map$,281,276,"" + 'monster_alias$ + "Nidhoggur's Guardian#4",2021,1,.@label$);
+			callfunc("F_Nyd_Monster_Summon", .@map$,281,277,"" + 'monster_alias$ + "Nidhoggur's Guardian#5",2021,1,.@label$);
+			break;
+		case 16:
+			callfunc("F_Nyd_Monster_Summon", .@map$,282,284,"" + 'monster_alias$ + "Nidhoggur's Guardian#1",2020,1,.@label$);	
+			callfunc("F_Nyd_Monster_Summon", .@map$,283,377,"" + 'monster_alias$ + "Nidhoggur's Guardian#2",2020,1,.@label$);
+			callfunc("F_Nyd_Monster_Summon", .@map$,280,368,"" + 'monster_alias$ + "Nidhoggur's Guardian#3",2020,1,.@label$);
+			callfunc("F_Nyd_Monster_Summon", .@map$,281,368,"" + 'monster_alias$ + "Nidhoggur's Guardian#4",2021,1,.@label$);
+			callfunc("F_Nyd_Monster_Summon", .@map$,281,367,"" + 'monster_alias$ + "Nidhoggur's Guardian#5",2021,1,.@label$);
+			break;
+		case 17:
+			freeloop(1);
+			for(set .@i, 0; .@i < 20; .@i++){
+				callfunc("F_Nyd_Monster_Summon", .@map$,20,12,"" + 'monster_alias$ + "Rhyncho",2020,1,.@label$);	
+				callfunc("F_Nyd_Monster_Summon", .@map$,380,172,"" + 'monster_alias$ + "Rhyncho",2020,1,.@label$);
+			}	
+			freeloop(0);
+			break;
+		case 18:
+			freeloop(1);
+			for(set .@i, 0; .@i < 20; .@i++){
+				callfunc("F_Nyd_Monster_Summon", .@map$,20,12,"" + 'monster_alias$ + "Phylla",2021,1,.@label$);	
+				callfunc("F_Nyd_Monster_Summon", .@map$,380,172,"" + 'monster_alias$ + "Phylla",2021,1,.@label$);
+			}	
+			freeloop(0);
+			break;
+		case 19:
+			freeloop(1);
+			for(set .@i, 0; .@i < 20; .@i++){
+				callfunc("F_Nyd_Monster_Summon", .@map$,20,12,"" + 'monster_alias$ + "Dark Shadow",2023,1,.@label$);
+				callfunc("F_Nyd_Monster_Summon", .@map$,380,172,"" + 'monster_alias$ + "Dark Shadow",2023,1,.@label$);
+			}	
+			freeloop(0);
+			break;
+		case 20:
+			freeloop(1);
+			for(set .@i, 0; .@i < 20; .@i++){
+				callfunc("F_Nyd_Monster_Summon", .@map$,20,12,"" + 'monster_alias$ + "Dark Pinguicula",2015,1,.@label$);
+				callfunc("F_Nyd_Monster_Summon", .@map$,380,172,"" + 'monster_alias$ + "Dark Pinguicula",2015,1,.@label$);
+			}	
+			freeloop(0);
+			break;
+		case 21:
+			callfunc("F_Nyd_Monster_Summon", .@map$,20,12,"" + 'monster_alias$ + "Rhyncho",2020,1,.@label$);	
+			callfunc("F_Nyd_Monster_Summon", .@map$,380,172,"" + 'monster_alias$ + "Rhyncho",2020,1,.@label$);
+			break;
+		case 22:
+			callfunc("F_Nyd_Monster_Summon", .@map$,20,12,"" + 'monster_alias$ + "Phylla",2021,1,.@label$);	
+			callfunc("F_Nyd_Monster_Summon", .@map$,380,172,"" + 'monster_alias$ + "Phylla",2021,1,.@label$);
+			break;
+		case 23:
+			callfunc("F_Nyd_Monster_Summon", .@map$,20,12,"" + 'monster_alias$ + "Dark Shadow",2023,1,.@label$);
+			callfunc("F_Nyd_Monster_Summon", .@map$,380,172,"" + 'monster_alias$ + "Dark Shadow",2023,1,.@label$);
+			break;
+		case 24:
+			callfunc("F_Nyd_Monster_Summon", .@map$,20,12,"" + 'monster_alias$ + "Dark Pinguicula",2015,1,.@label$);
+			callfunc("F_Nyd_Monster_Summon", .@map$,380,172,"" + 'monster_alias$ + "Dark Pinguicula",2015,1,.@label$);
+			break;			
+	}
+return;
+}
+
+// Nydhoggs Settings
+//============================================================
+function	script	F_Nyd_Settings	{
+
+	setarray $@easy_mode_variables, 0			//bonus_hp_rate
+									, 0			//bonus_dmg_rate
+									, 0			//bonus_damagetaken
+									, 0			//bonus_def
+									, 0			//bonus_mdef
+									, 0			//bonus_hit
+									, 0;		//bonus_flee
+									
+	setarray $@veteran_mode_variables, 50		//bonus_hp_rate
+									, 50		//bonus_dmg_rate
+									, -10		//bonus_damagetaken
+									, 50		//bonus_def
+									, 50		//bonus_mdef
+									, 50		//bonus_hit
+									, 50;		//bonus_flee
+									
+	setarray $@nightmare_mode_variables, 100		//bonus_hp_rate
+									, 100		//bonus_dmg_rate
+									, -20		//bonus_damagetaken
+									, 100		//bonus_def
+									, 100		//bonus_mdef
+									, 100		//bonus_hit
+									, 100;		//bonus_flee
+									
+	setarray $@hell_mode_variables, 150			//bonus_hp_rate
+									, 150		//bonus_dmg_rate
+									, -30		//bonus_damagetaken
+									, 150		//bonus_def
+									, 150		//bonus_mdef
+									, 150		//bonus_hit
+									, 150;		//bonus_flee
+									
+	setarray $@torment_mode_variables, 200		//bonus_hp_rate
+									, 200		//bonus_dmg_rate
+									, -40		//bonus_damagetaken
+									, 200		//bonus_def
+									, 200		//bonus_mdef
+									, 200		//bonus_hit
+									, 200;		//bonus_flee
+									
+	setarray $@bonus_exp[1], 0					//easy_bonus_exp
+						, 50					//veteran_bonus_exp
+						, 100					//nightmare_bonus_exp
+						, 150					//hell_bonus_exp
+						, 200;					//torment_bonus_exp
+
+	setarray $@instance_points[1], 10			//easy mode
+								, 20			//veteran mode
+								, 40			//nightmare mode
+								, 80			//hell mode
+								, 160;			//torment mode
+								
+	setarray $@monster_alias$[1], ""			//monster alias
+								, "Veteran "
+								, "Nightmare "
+								, "Hellish "
+								, "Tormented ";								
+	
+	setarray $@difficulty_mode$[1], "Easy Mode"	//announcement
+								, "Veteran Mode"
+								, "Nightmare Mode"
+								, "Hell Mode"
+								, "Torment Mode";
+								
+	setarray $@var_names$[1], "NYDHOGGS_EASY"		//custom cashpoints variable name
+							, "NYDHOGGS_VETERAN"
+							, "NYDHOGGS_NIGHTMARE"
+							, "NYDHOGGS_HELL"
+							, "NYDHOGGS_TORMENT";					
+return;
 }
 
 // Settings :

@@ -35,10 +35,11 @@
 //= 1.9 Corrected formula of percentage per difficulties. [Louis T Steinhil]
 //= 2.0 Added Experience Rewards per Difficulty. [Louis T Steinhil]
 //= 2.1 Added Level Restriction. [Louis T Steinhil]
-//= 2.2 Changed Instance Points to NYD_EASY,VETERRAN,NIGHTMARE,HELL & TORMENT. [Louis T Steinhil]
+//= 2.2 Changed Instance Points to ORCS_EASY,VETERRAN,NIGHTMARE,HELL & TORMENT. [Louis T Steinhil]
 //= 2.3 Added Emistry's Multi-Currency Shop. [Louis T Steinhil]
 //= 2.4 Added Items to Multi-Currency Shop. [Louis T Steinhil]
 //= 2.5 Added Alias names to monsters. [Louis T Steinhil]
+//= 2.6 Added a function settings for easy access of variables. [Louis T Steinhil]
 //============================================================ 
 
 // Entrance
@@ -47,8 +48,10 @@ gef_fild10,242,202,0	script	Dimensional Gorge Piece	406,{
 
 	set .@orctime,checkquest(12059,PLAYTIME);
 	set .@party_id,getcharid(1);
+	getpartymember .@party_id, 1;
+	set .@online_members_count, $@partymembercount;	
 	set .@md_name$,"Orc's Memory";
-	set 'md_name$,.@md_name$;
+	callfunc "F_Orcs_Settings";
 	
 // GM Bypass
 //============================================================
@@ -83,8 +86,9 @@ gef_fild10,242,202,0	script	Dimensional Gorge Piece	406,{
 				"Difficulty Information",
 				"Cancel")) {
 				case 1:
-			// Difficulty 
+	// Difficulty 
 	//============================================================
+	
 					.@level_mode = select(
 						"[ Level 30+ ] Normal", 
 						"[ Level 100+ ] Veteran", 
@@ -93,7 +97,6 @@ gef_fild10,242,202,0	script	Dimensional Gorge Piece	406,{
 						"[ Level 240+ ] ^ff0000Torment^000000"
 					);
 					$ORCSMODE[getcharid(1)] = .@level_mode;
-					setarray .@modes$[1], "Normal Mode", "Veteran Mode", "Nightmare Mode", "Hell Mode", "Torment Mode";
 					set .@required_level, 0;
 
 					if (.@level_mode == 1) { .@required_level = 30; }
@@ -102,14 +105,14 @@ gef_fild10,242,202,0	script	Dimensional Gorge Piece	406,{
 					else if (.@level_mode == 4) { .@required_level = 200; }
 					else if (.@level_mode == 5) { .@required_level = 240; }
 
-					if (!instance_check_party(getcharid(1),1,.@required_level, 260)) {
+					if (!instance_check_party(getcharid(1), .@online_members_count, .@required_level, 260)) {
 						mes "All party members need to be at least Level " + .@required_level + " to enter."; 
 						close;				
 					} 
 					
 					mes "Your party meets the Memorial Dungeon requirements.",
 					.@modez$ = .@modes$[.@level_mode];				
-					announce "The party [ " + getpartyname(.@party_id) + " ] has registered "+.@md_name$+" on " + .@modez$ + ".", bc_all;					
+					announce "The party [ " + getpartyname(.@party_id) + " ] has registered "+.@md_name$+" on " + $@difficulty_mode$[.@level_mode] + ".", bc_all;					
 						
 	//=============================================================				
 					if (instance_create(.@md_name$) < 0) {
@@ -127,118 +130,84 @@ gef_fild10,242,202,0	script	Dimensional Gorge Piece	406,{
 					mes "[ Difficulty Information ]";
 					mes "^ff0000-----------------------------------------------------^000000";
 					mes "Difficulty Level: ^ff0000[ Easy ]^000000";
-					mes "Monster HP: ^ff0000[ + 0% ]^000000";
-					mes "Monster damage: + ^ff0000[ 0% ]^000000";
-					mes "Monster takes less damage: + ^ff0000[ 0% ]^000000";
-					mes "Monster EXP reward: + ^ff0000[ 0% ]^000000";
-					mes ""+.@md_name$+" Easy Points: + ^ff0000[ 10 ]^000000";
+					mes "Monster max hp: + ^ff0000[ " + $@easy_mode_variables[0] + "% ]^000000";
+					mes "Monster damage: + ^ff0000[ " + $@easy_mode_variables[1] + "% ]^000000";
+					mes "Monster takes less damage: ^ff0000[ " + $@easy_mode_variables[2] + "% ]^000000";
+					mes "Monster def: + ^ff0000[ " + $@easy_mode_variables[3] + "% ]^000000";
+					mes "Monster mdef: + ^ff0000[ " + $@easy_mode_variables[4] + "% ]^000000";
+					mes "Monster hit: + ^ff0000[ " + $@easy_mode_variables[5] + "% ]^000000";
+					mes "Monster flee: + ^ff0000[ " + $@easy_mode_variables[6] + "% ]^000000";
+					mes "Monster bonus exp reward: x ^ff0000[ " + $@bonus_exp[1] + " ]^000000";
+					mes ""+.@md_name$ +" Easy Points: + ^ff0000[ " + $@instance_points[1] + " ]^000000";
 					mes "^ff0000-----------------------------------------------------^000000";
 					next;
 					mes "[ Difficulty Information ]";
 					mes "^ff0000-----------------------------------------------------^000000";
 					mes "Difficulty Level: ^ff0000[ Veteran ]^000000";
-					mes "Monster HP: ^ff0000[ + 50% ]^000000";
-					mes "Monster damage: + ^ff0000[ 50% ]^000000";
-					mes "Monster takes less damage: + ^ff0000[ 10% ]^000000";
-					mes "Monster EXP reward: + ^ff0000[ 50% ]^000000";
-					mes ""+.@md_name$+" Veteran Points: + ^ff0000[ 20 ]^000000";
+					mes "Monster max hp: + ^ff0000[ " + $@veteran_mode_variables[0] + "% ]^000000";
+					mes "Monster damage: + ^ff0000[ " + $@veteran_mode_variables[1] + "% ]^000000";
+					mes "Monster takes less damage: ^ff0000[ " + $@veteran_mode_variables[2] + "% ]^000000";
+					mes "Monster def: + ^ff0000[ " + $@veteran_mode_variables[3] + "% ]^000000";
+					mes "Monster mdef: + ^ff0000[ " + $@veteran_mode_variables[4] + "% ]^000000";
+					mes "Monster hit: + ^ff0000[ " + $@veteran_mode_variables[5] + "% ]^000000";
+					mes "Monster flee: + ^ff0000[ " + $@veteran_mode_variables[6] + "% ]^000000";
+					mes "Monster bonus exp reward: x ^ff0000[ " + $@bonus_exp[2] + " ]^000000";
+					mes ""+.@md_name$ +" Veteran Points: + ^ff0000[ " + $@instance_points[2] + " ]^000000";
 					mes "^ff0000-----------------------------------------------------^000000";
 					next;
 					mes "[ Difficulty Information ]";
 					mes "^ff0000-----------------------------------------------------^000000";
 					mes "Difficulty Level: ^ff0000[ Nightmare ]^000000";
-					mes "Monster HP: ^ff0000[ + 100% ]^000000";
-					mes "Monster damage: + ^ff0000[ 100% ]^000000";
-					mes "Monster takes less damage: + ^ff0000[ 20% ]^000000";
-					mes "Monster EXP reward: + ^ff0000[ 100% ]^000000";
-					mes ""+.@md_name$+" Nightmare Points: + ^ff0000[ 40 ]^000000";
+					mes "Monster max hp: + ^ff0000[ " + $@nightmare_mode_variables[0] + "% ]^000000";
+					mes "Monster damage: + ^ff0000[ " + $@nightmare_mode_variables[1] + "% ]^000000";
+					mes "Monster takes less damage: ^ff0000[ " + $@nightmare_mode_variables[2] + "% ]^000000";
+					mes "Monster def: + ^ff0000[ " + $@nightmare_mode_variables[3] + "% ]^000000";
+					mes "Monster mdef: + ^ff0000[ " + $@nightmare_mode_variables[4] + "% ]^000000";
+					mes "Monster hit: + ^ff0000[ " + $@nightmare_mode_variables[5] + "% ]^000000";
+					mes "Monster flee: + ^ff0000[ " + $@nightmare_mode_variables[6] + "% ]^000000";
+					mes "Monster bonus exp reward: x ^ff0000[ " + $@bonus_exp[3] + " ]^000000";
+					mes ""+.@md_name$ +" Nightmare Points: + ^ff0000[ " + $@instance_points[3] + " ]^000000";
 					mes "^ff0000-----------------------------------------------------^000000";
 					next;
 					mes "[ Difficulty Information ]";
 					mes "^ff0000-----------------------------------------------------^000000";
 					mes "Difficulty Level: ^ff0000[ Hell ]^000000";
-					mes "Monster HP: ^ff0000[ + 150% ]^000000";
-					mes "Monster damage: + ^ff0000[ 150% ]^000000";
-					mes "Monster takes less damage: + ^ff0000[ 30% ]^000000";
-					mes "Monster EXP reward: + ^ff0000[ 150% ]^000000";
-					mes ""+.@md_name$+" Hell Points: + ^ff0000[ 80 ]^000000";
+					mes "Monster max hp: + ^ff0000[ " + $@hell_mode_variables[0] + "% ]^000000";
+					mes "Monster damage: + ^ff0000[ " + $@hell_mode_variables[1] + "% ]^000000";
+					mes "Monster takes less damage: ^ff0000[ " + $@hell_mode_variables[2] + "% ]^000000";
+					mes "Monster def: + ^ff0000[ " + $@hell_mode_variables[3] + "% ]^000000";
+					mes "Monster mdef: + ^ff0000[ " + $@hell_mode_variables[4] + "% ]^000000";
+					mes "Monster hit: + ^ff0000[ " + $@hell_mode_variables[5] + "% ]^000000";
+					mes "Monster flee: + ^ff0000[ " + $@hell_mode_variables[6] + "% ]^000000";
+					mes "Monster bonus exp reward: x ^ff0000[ " + $@bonus_exp[4] + " ]^000000";
+					mes ""+.@md_name$ +" Hell Points: + ^ff0000[ " + $@instance_points[4] + " ]^000000";
 					mes "^ff0000-----------------------------------------------------^000000";
 					next;
 					mes "[ Difficulty Information ]";
 					mes "^ff0000-----------------------------------------------------^000000";
 					mes "Difficulty Level: ^ff0000[ Torment ]^000000";
-					mes "Monster HP: ^ff0000[ + 200% ]^000000";
-					mes "Monster damage: + ^ff0000[ 200% ]^000000";
-					mes "Monster takes less damage: + ^ff0000[ 40% ]^000000";
-					mes "Monster EXP reward: + ^ff0000[ 200% ]^000000";
-					mes ""+.@md_name$+" Torment Points: + ^ff0000[ 160 ]^000000";
+					mes "Monster max hp: + ^ff0000[ " + $@torment_mode_variables[0] + "% ]^000000";
+					mes "Monster damage: + ^ff0000[ " + $@torment_mode_variables[1] + "% ]^000000";
+					mes "Monster takes less damage: ^ff0000[ " + $@torment_mode_variables[2] + "% ]^000000";
+					mes "Monster def: + ^ff0000[ " + $@torment_mode_variables[3] + "% ]^000000";
+					mes "Monster mdef: + ^ff0000[ " + $@torment_mode_variables[4] + "% ]^000000";
+					mes "Monster hit: + ^ff0000[ " + $@torment_mode_variables[5] + "% ]^000000";
+					mes "Monster flee: + ^ff0000[ " + $@torment_mode_variables[6] + "% ]^000000";
+					mes "Monster bonus exp reward: x ^ff0000[ " + $@bonus_exp[5] + " ]^000000";
+					mes ""+.@md_name$ +" Torment Points: + ^ff0000[ " + $@instance_points[5] + " ]^000000";
 					mes "^ff0000-----------------------------------------------------^000000";
 					close;				
 				case 4:
 					close;
 			}
 		}
-		if(select(.@md_name$ + " Enter the dungeon:Cancel") == 2)
-			end;
-		callsub L_Enter,1;
 	} else if (.@orctime == 0 || .@orctime == 1) {
 		mes "You can enter the Dungeon if it has been generated.";
 		next;
-		switch(select("Enter the "+.@md_name$+":Difficulty Information:Cancel")) {
+		switch(select("Enter the "+.@md_name$+":Cancel")) {
 			case 1:
-				callsub L_Enter,0,0;
+				callsub L_Enter,0,0;		
 			case 2:
-				mes "[ Difficulty Information ]";
-				mes "^ff0000-----------------------------------------------------^000000";
-				mes "Difficulty Level: ^ff0000[ Easy ]^000000";
-				mes "Monster HP: ^ff0000[ + 0% ]^000000";
-				mes "Monster damage: + ^ff0000[ 0% ]^000000";
-				mes "Monster takes less damage: + ^ff0000[ 0% ]^000000";
-				mes "Monster EXP reward: + ^ff0000[ 0% ]^000000";
-				mes ""+.@md_name$ +" Easy Points: + ^ff0000[ 10 ]^000000";
-				mes "^ff0000-----------------------------------------------------^000000";
-				next;
-				mes "[ Difficulty Information ]";
-				mes "^ff0000-----------------------------------------------------^000000";
-				mes "Difficulty Level: ^ff0000[ Veteran ]^000000";
-				mes "Monster HP: ^ff0000[ + 50% ]^000000";
-				mes "Monster damage: + ^ff0000[ 50% ]^000000";
-				mes "Monster takes less damage: + ^ff0000[ 10% ]^000000";
-				mes "Monster EXP reward: + ^ff0000[ 50% ]^000000";
-				mes ""+.@md_name$ +" Veteran Points: + ^ff0000[ 20 ]^000000";
-				mes "^ff0000-----------------------------------------------------^000000";
-				next;
-				mes "[ Difficulty Information ]";
-				mes "^ff0000-----------------------------------------------------^000000";
-				mes "Difficulty Level: ^ff0000[ Nightmare ]^000000";
-				mes "Monster HP: ^ff0000[ + 100% ]^000000";
-				mes "Monster damage: + ^ff0000[ 100% ]^000000";
-				mes "Monster takes less damage: + ^ff0000[ 20% ]^000000";
-				mes "Monster EXP reward: + ^ff0000[ 100% ]^000000";
-				mes ""+.@md_name$ +" Nightmare Points: + ^ff0000[ 40 ]^000000";
-				mes "^ff0000-----------------------------------------------------^000000";
-				next;
-				mes "[ Difficulty Information ]";
-				mes "^ff0000-----------------------------------------------------^000000";
-				mes "Difficulty Level: ^ff0000[ Hell ]^000000";
-				mes "Monster HP: ^ff0000[ + 150% ]^000000";
-				mes "Monster damage: + ^ff0000[ 150% ]^000000";
-				mes "Monster takes less damage: + ^ff0000[ 30% ]^000000";
-				mes "Monster EXP reward: + ^ff0000[ 150% ]^000000";
-				mes ""+.@md_name$ +" Hell Points: + ^ff0000[ 80 ]^000000";
-				mes "^ff0000-----------------------------------------------------^000000";
-				next;
-				mes "[ Difficulty Information ]";
-				mes "^ff0000-----------------------------------------------------^000000";
-				mes "Difficulty Level: ^ff0000[ Torment ]^000000";
-				mes "Monster HP: ^ff0000[ + 200% ]^000000";
-				mes "Monster damage: + ^ff0000[ 200% ]^000000";
-				mes "Monster takes less damage: + ^ff0000[ 40% ]^000000";
-				mes "Monster EXP reward: + ^ff0000[ 200% ]^000000";
-				mes ""+.@md_name$ +" Torment Points: + ^ff0000[ 160 ]^000000";
-				mes "^ff0000-----------------------------------------------------^000000";
-				close;			
-			case 3:
 				close;
 		}
 		callsub L_Enter,0;
@@ -1246,56 +1215,55 @@ function	script	F_Orcs_Monster_Summon	{
 	
 	switch('level_mode){
 		case 1://Normal
-			.@bonus_hp_rate += 0;
-			.@bonus_dmg_rate += 0;
-			.@bonus_damagetaken += 0;
-			.@bonus_def += 0;
-			.@bonus_mdef += 0;
-			.@bonus_hit += 0;			
-			.@bonus_flee += 0;
+			.@bonus_hp_rate += $@easy_mode_variables[0];
+			.@bonus_dmg_rate += $@easy_mode_variables[1];
+			.@bonus_damagetaken += $@easy_mode_variables[2];
+			.@bonus_def += $@easy_mode_variables[3];
+			.@bonus_mdef += $@easy_mode_variables[4];
+			.@bonus_hit += $@easy_mode_variables[5];			
+			.@bonus_flee += $@easy_mode_variables[6];
 			break;
 		case 2://Veteran
-			.@bonus_hp_rate += 50;
-			.@bonus_dmg_rate += 50;
-			.@bonus_damagetaken += -10;
-			.@bonus_def += 50;
-			.@bonus_mdef += 50;
-			.@bonus_hit += 50;			
-			.@bonus_flee += 50;		
+			.@bonus_hp_rate += $@veteran_mode_variables[0];
+			.@bonus_dmg_rate += $@veteran_mode_variables[1];
+			.@bonus_damagetaken += $@veteran_mode_variables[2];
+			.@bonus_def += $@veteran_mode_variables[3];
+			.@bonus_mdef += $@veteran_mode_variables[4];
+			.@bonus_hit += $@veteran_mode_variables[5];			
+			.@bonus_flee += $@veteran_mode_variables[6];		
 			break;
 		case 3://Nightmare
-			.@bonus_hp_rate += 100;
-			.@bonus_dmg_rate += 100;
-			.@bonus_damagetaken += -20;
-			.@bonus_def += 100;
-			.@bonus_mdef += 100;
-			.@bonus_hit += 100;			
-			.@bonus_flee += 100;					
+			.@bonus_hp_rate += $@nightmare_mode_variables[0];
+			.@bonus_dmg_rate += $@nightmare_mode_variables[1];
+			.@bonus_damagetaken += $@nightmare_mode_variables[2];
+			.@bonus_def += $@nightmare_mode_variables[3];
+			.@bonus_mdef += $@nightmare_mode_variables[4];
+			.@bonus_hit += $@nightmare_mode_variables[5];			
+			.@bonus_flee += $@nightmare_mode_variables[6];					
 			break;
 		case 4://Hell
-			.@bonus_hp_rate += 150;
-			.@bonus_dmg_rate += 150;
-			.@bonus_damagetaken += -30;
-			.@bonus_def += 150;
-			.@bonus_mdef += 150;
-			.@bonus_hit += 150;			
-			.@bonus_flee += 150;			
+			.@bonus_hp_rate += .@hell_mode_variables[0];
+			.@bonus_dmg_rate += .@hell_mode_variables[1];
+			.@bonus_damagetaken += .@hell_mode_variables[2];
+			.@bonus_def += .@hell_mode_variables[3];
+			.@bonus_mdef += .@hell_mode_variables[4];
+			.@bonus_hit += .@hell_mode_variables[5];			
+			.@bonus_flee += .@hell_mode_variables[6];			
 			break;
 		case 5://Torment
-			.@bonus_hp_rate += 200;
-			.@bonus_dmg_rate += 200;
-			.@bonus_damagetaken += -40;
-			.@bonus_def += 200;
-			.@bonus_mdef += 200;
-			.@bonus_hit += 200;			
-			.@bonus_flee += 200;				
+			.@bonus_hp_rate += $@torment_mode_variables[0];
+			.@bonus_dmg_rate += $@torment_mode_variables[1];
+			.@bonus_damagetaken += $@torment_mode_variables[2];
+			.@bonus_def += $@torment_mode_variables[3];
+			.@bonus_mdef += $@torment_mode_variables[4];
+			.@bonus_hit += $@torment_mode_variables[5];			
+			.@bonus_flee += $@torment_mode_variables[6];				
 			break;
 	}
+	
 	deletearray $@mobid,getarraysize($@mobid);
 	monster .@map$, .@x1, .@y1, .@mob_name$, .@mob_id, .@amount, .@label$;
 	copyarray .@GID, $@mobid, getarraysize($@mobid);
-	if(!.@bonus_hp_rate&& !.@bonus_dmg_rate&& !.@bonus_damagetaken&& !.@bonus_def&& !.@bonus_mdef&& !.@bonus_hit&& !.@bonus_flee)
-		return;
 	getunitdata .@GID, .@ST;
 
 freeloop(1);
@@ -1342,22 +1310,17 @@ return;
 // Exp Reward Function
 //============================================================
 function	script	F_Orcs_Exp	{
-	setarray .@bonusExp[1],0,50,100,150,200;
-	'bonuzExp = .@bonusExp['level_mode];
-	set BaseExp, BaseExp + (getmonsterinfo(killedrid,MOB_BASEEXP) * 'bonuzExp);
-	set JobExp, JobExp + (getmonsterinfo(killedrid,MOB_JOBEXP) * 'bonuzExp);	
+	'bonus_exp = $@bonus_exp['level_mode];
+	getexp (getmonsterinfo(killedrid,MOB_BASEEXP) * 'bonus_exp),(getmonsterinfo(killedrid,MOB_JOBEXP) * 'bonus_exp);	
 return;
 }
 // Reward Function
 //============================================================
 function	script	F_Orcs_Reward	{
-	setarray .@md_points[1], 10, 20, 40, 80, 160;
-	setarray .@modes$[1], "Easy Mode", "Veteran Mode", "Nightmare Mode", "Hell Mode", "Torment Mode";
-	setarray .@var_names$[1], "ORCS_EASY", "ORCS_VETERAN", "ORCS_NIGHTMARE", "ORCS_HELL", "ORCS_TORMENT";
 	
-	'md_points = .@md_points['level_mode];
-	'modez$ = .@modes$['level_mode];
-	'var_name$ = .@var_names$['level_mode];
+	'instance_points = $@instance_points['level_mode];
+	'difficulty_mode$ = $@difficulty_mode$['level_mode];
+	'var_name$ = $@var_names$['level_mode];
 	'party_id = instance_live_info(ILI_OWNER);
 	
 	getpartymember 'party_id, 1;
@@ -1369,9 +1332,9 @@ function	script	F_Orcs_Reward	{
 	for (.@i = 0; .@i < getarraysize(.@CID); .@i++) {
 		if (isloggedin(.@AID[.@i], .@CID[.@i])) {
 			if (strcharinfo(3, .@CID[.@i]) == 'map$) {
-				setd("#" + 'var_name$, getd("#" + 'var_name$) + 'md_points);
-				announce "The party [ " + getpartyname('party_id) + " ] has defeated Orc's Memory on " + 'modez$ + ".", bc_all;
-				message strcharinfo(0, .@CID[.@i]), "You've been granted " + 'md_points + " " + 'var_name$ + ".";
+				setd("#" + 'var_name$, getd("#" + 'var_name$) + 'instance_points);
+				announce "The party [ " + getpartyname('party_id) + " ] has defeated Orc's Memory on " + 'difficulty_mode$ + ".", bc_all;
+				message strcharinfo(0, .@CID[.@i]), "You've been granted " + 'instance_points + " " + 'var_name$ + ".";
 				message strcharinfo(0, .@CID[.@i]), "You now have " + getd("#" + 'var_name$) + " " + 'var_name$ + ".";
 			}
 		}
@@ -1380,8 +1343,8 @@ function	script	F_Orcs_Reward	{
 }
 //== Core Functions ========================================
 function	script	F_Orcs_Monster	{
-	setarray .@monster_alias$[1], "", "Veteran ", "Nightmare ", "Hellish ", "Tormented ";
-	'monster_alias$ = .@monster_alias$['level_mode];
+
+	'monster_alias$ = $@monster_alias$['level_mode];
 	
 	.@level = getarg(0);
 	.@map$ = getarg(1);
@@ -1498,6 +1461,82 @@ function	script	F_Orcs_Monster	{
 			break;
 	}
 	return;
+}
+
+// Orcs Settings
+//============================================================
+function	script	F_Orcs_Settings	{
+
+	setarray $@easy_mode_variables, 0			//bonus_hp_rate
+									, 0			//bonus_dmg_rate
+									, 0			//bonus_damagetaken
+									, 0			//bonus_def
+									, 0			//bonus_mdef
+									, 0			//bonus_hit
+									, 0;		//bonus_flee
+									
+	setarray $@veteran_mode_variables, 50		//bonus_hp_rate
+									, 50		//bonus_dmg_rate
+									, -10		//bonus_damagetaken
+									, 50		//bonus_def
+									, 50		//bonus_mdef
+									, 50		//bonus_hit
+									, 50;		//bonus_flee
+									
+	setarray $@nightmare_mode_variables, 100		//bonus_hp_rate
+									, 100		//bonus_dmg_rate
+									, -20		//bonus_damagetaken
+									, 100		//bonus_def
+									, 100		//bonus_mdef
+									, 100		//bonus_hit
+									, 100;		//bonus_flee
+									
+	setarray $@hell_mode_variables, 150			//bonus_hp_rate
+									, 150		//bonus_dmg_rate
+									, -30		//bonus_damagetaken
+									, 150		//bonus_def
+									, 150		//bonus_mdef
+									, 150		//bonus_hit
+									, 150;		//bonus_flee
+									
+	setarray $@torment_mode_variables, 200		//bonus_hp_rate
+									, 200		//bonus_dmg_rate
+									, -40		//bonus_damagetaken
+									, 200		//bonus_def
+									, 200		//bonus_mdef
+									, 200		//bonus_hit
+									, 200;		//bonus_flee
+									
+	setarray $@bonus_exp[1], 0					//easy_bonus_exp
+						, 50					//veteran_bonus_exp
+						, 100					//nightmare_bonus_exp
+						, 150					//hell_bonus_exp
+						, 200;					//torment_bonus_exp
+
+	setarray $@instance_points[1], 10			//easy mode
+								, 20			//veteran mode
+								, 40			//nightmare mode
+								, 80			//hell mode
+								, 160;			//torment mode
+								
+	setarray $@monster_alias$[1], ""			//monster alias
+								, "Veteran "
+								, "Nightmare "
+								, "Hellish "
+								, "Tormented ";								
+	
+	setarray $@difficulty_mode$[1], "Easy Mode"	//announcement
+								, "Veteran Mode"
+								, "Nightmare Mode"
+								, "Hell Mode"
+								, "Torment Mode";
+								
+	setarray $@var_names$[1], "ORCS_EASY"		//custom cashpoints variable name
+							, "ORCS_VETERAN"
+							, "ORCS_NIGHTMARE"
+							, "ORCS_HELL"
+							, "ORCS_TORMENT";					
+return;
 }
 // Settings :
 //	-	Only required to edit the ShopSetting() Function

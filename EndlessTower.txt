@@ -48,6 +48,7 @@
 //= 3.4 Changed Instance Points to ETOWER_EASY,VETERRAN,NIGHTMARE,HELL & TORMENT. [Louis T Steinhil]
 //= 3.5 Added Emistry's Multi-Currency Shop. [Louis T Steinhil]
 //= 3.6 Added Items to Multi-Currency Shop. [Louis T Steinhil]
+//= 3.7 Added a function settings for easy access of variables. [Louis T Steinhil]
 //============================================================ 
 
 alberta,214,77,6	script	Captain Janssen	709,{
@@ -235,14 +236,14 @@ e_tower,81,105,0	script	Tower Protection Stone	406,{
         }
     }
 //============================================================
-	set .@party_id,getcharid(1);
-	set .@md_name$,"Endless Tower";
-	//set .@is_leader, ( getcharid(0) == getpartyleader(.@party_id,2) );
-
-	
+	set .@party_id, getcharid(1);
+	getpartymember .@party_id, 1;
+	set .@online_members_count, $@partymembercount;
+	set .@md_name$,"Endless Tower";	
 	set .@etower_timer,checkquest(60200,PLAYTIME); // 1 week
 	set .@etower_timer2,checkquest(60201,PLAYTIME); // 4 hours
-
+	callfunc "F_Tower_Settings";
+	
 	//if (!instance_check_party(.@party_id,2)) {
 	//	mes "Make or join a party with more than 1 member and try again.";
 	//	close;
@@ -250,7 +251,7 @@ e_tower,81,105,0	script	Tower Protection Stone	406,{
 	switch(.@etower_timer) {
 		case -1:
 			if (is_party_leader() == true) {		
-				mes "Confirmed the party has been made. Would you like to reserve entrance to the Endless Tower?";
+				mes "Confirmed the party has been made. Would you like to reserve entrance to the " + .@md_name$ + "?";
 				next;			
 				switch(select(
 				( .@party_id && getpartyleader(.@party_id,2) && !instance_id(IM_PARTY) )? "Generate dungeon "+.@md_name$:"",
@@ -261,6 +262,7 @@ e_tower,81,105,0	script	Tower Protection Stone	406,{
 					case 1:
 		// Difficulty 
 		//============================================================
+		
 						.@level_mode = select(
 							"[ Level 50+ ] Normal", 
 							"[ Level 100+ ] Veteran", 
@@ -269,7 +271,6 @@ e_tower,81,105,0	script	Tower Protection Stone	406,{
 							"[ Level 240+ ] ^ff0000Torment^000000"
 						);
 						$ENDLESSMODE[getcharid(1)] = .@level_mode;
-						setarray .@modes$[1], "Normal Mode", "Veteran Mode", "Nightmare Mode", "Hell Mode", "Torment Mode";
 						set .@required_level, 0;
 
 						if (.@level_mode == 1) { .@required_level = 50; }
@@ -278,14 +279,13 @@ e_tower,81,105,0	script	Tower Protection Stone	406,{
 						else if (.@level_mode == 4) { .@required_level = 200; }
 						else if (.@level_mode == 5) { .@required_level = 260; }
 
-						if (!instance_check_party(getcharid(1),1,.@required_level, 260)) {
+						if (!instance_check_party(getcharid(1), .@online_members_count, .@required_level, 260)) {
 							mes "All party members need to be at least Level " + .@required_level + " to enter."; 
 							close;				
 						} 
 						
-						mes "Your party meets the Memorial Dungeon requirements.";
-						.@modez$ = .@modes$[.@level_mode];				
-						announce "The party [ " + getpartyname(.@party_id) + " ] has registered "+.@md_name$+" on " + .@modez$ + ".", bc_all;
+						mes "Your party meets the Memorial Dungeon requirements.";				
+						announce "The party [ " + getpartyname(.@party_id) + " ] has registered "+.@md_name$+" on " + $@difficulty_mode$[.@level_mode] + ".", bc_all;
 						instance_create("Endless Tower");
 						close;					
 							
@@ -301,51 +301,71 @@ e_tower,81,105,0	script	Tower Protection Stone	406,{
 						mes "[ Difficulty Information ]";
 						mes "^ff0000-----------------------------------------------------^000000";
 						mes "Difficulty Level: ^ff0000[ Easy ]^000000";
-						mes "Monster HP: ^ff0000[ + 0% ]^000000";
-						mes "Monster damage: + ^ff0000[ 0% ]^000000";
-						mes "Monster takes less damage: + ^ff0000[ 0% ]^000000";
-						mes "Monster EXP reward: + ^ff0000[ 0% ]^000000";
-						mes ""+.@md_name$ +" Easy Points: + ^ff0000[ 10 ]^000000";
+						mes "Monster max hp: + ^ff0000[ " + $@easy_mode_variables[0] + "% ]^000000";
+						mes "Monster damage: + ^ff0000[ " + $@easy_mode_variables[1] + "% ]^000000";
+						mes "Monster takes less damage: ^ff0000[ " + $@easy_mode_variables[2] + "% ]^000000";
+						mes "Monster def: + ^ff0000[ " + $@easy_mode_variables[3] + "% ]^000000";
+						mes "Monster mdef: + ^ff0000[ " + $@easy_mode_variables[4] + "% ]^000000";
+						mes "Monster hit: + ^ff0000[ " + $@easy_mode_variables[5] + "% ]^000000";
+						mes "Monster flee: + ^ff0000[ " + $@easy_mode_variables[6] + "% ]^000000";
+						mes "Monster bonus exp reward: x ^ff0000[ " + $@bonus_exp[1] + " ]^000000";
+						mes ""+.@md_name$ +" Easy Points: + ^ff0000[ " + $@instance_points[1] + " ]^000000";
 						mes "^ff0000-----------------------------------------------------^000000";
 						next;
 						mes "[ Difficulty Information ]";
 						mes "^ff0000-----------------------------------------------------^000000";
 						mes "Difficulty Level: ^ff0000[ Veteran ]^000000";
-						mes "Monster HP: ^ff0000[ + 50% ]^000000";
-						mes "Monster damage: + ^ff0000[ 50% ]^000000";
-						mes "Monster takes less damage: + ^ff0000[ 10% ]^000000";
-						mes "Monster EXP reward: + ^ff0000[ 50% ]^000000";
-						mes ""+.@md_name$ +" Veteran Points: + ^ff0000[ 20 ]^000000";
+						mes "Monster max hp: + ^ff0000[ " + $@veteran_mode_variables[0] + "% ]^000000";
+						mes "Monster damage: + ^ff0000[ " + $@veteran_mode_variables[1] + "% ]^000000";
+						mes "Monster takes less damage: ^ff0000[ " + $@veteran_mode_variables[2] + "% ]^000000";
+						mes "Monster def: + ^ff0000[ " + $@veteran_mode_variables[3] + "% ]^000000";
+						mes "Monster mdef: + ^ff0000[ " + $@veteran_mode_variables[4] + "% ]^000000";
+						mes "Monster hit: + ^ff0000[ " + $@veteran_mode_variables[5] + "% ]^000000";
+						mes "Monster flee: + ^ff0000[ " + $@veteran_mode_variables[6] + "% ]^000000";
+						mes "Monster bonus exp reward: x ^ff0000[ " + $@bonus_exp[2] + " ]^000000";
+						mes ""+.@md_name$ +" Veteran Points: + ^ff0000[ " + $@instance_points[2] + " ]^000000";
 						mes "^ff0000-----------------------------------------------------^000000";
 						next;
 						mes "[ Difficulty Information ]";
 						mes "^ff0000-----------------------------------------------------^000000";
 						mes "Difficulty Level: ^ff0000[ Nightmare ]^000000";
-						mes "Monster HP: ^ff0000[ + 100% ]^000000";
-						mes "Monster damage: + ^ff0000[ 100% ]^000000";
-						mes "Monster takes less damage: + ^ff0000[ 20% ]^000000";
-						mes "Monster EXP reward: + ^ff0000[ 100% ]^000000";
-						mes ""+.@md_name$ +" Nightmare Points: + ^ff0000[ 40 ]^000000";
+						mes "Monster max hp: + ^ff0000[ " + $@nightmare_mode_variables[0] + "% ]^000000";
+						mes "Monster damage: + ^ff0000[ " + $@nightmare_mode_variables[1] + "% ]^000000";
+						mes "Monster takes less damage: ^ff0000[ " + $@nightmare_mode_variables[2] + "% ]^000000";
+						mes "Monster def: + ^ff0000[ " + $@nightmare_mode_variables[3] + "% ]^000000";
+						mes "Monster mdef: + ^ff0000[ " + $@nightmare_mode_variables[4] + "% ]^000000";
+						mes "Monster hit: + ^ff0000[ " + $@nightmare_mode_variables[5] + "% ]^000000";
+						mes "Monster flee: + ^ff0000[ " + $@nightmare_mode_variables[6] + "% ]^000000";
+						mes "Monster bonus exp reward: x ^ff0000[ " + $@bonus_exp[3] + " ]^000000";
+						mes ""+.@md_name$ +" Nightmare Points: + ^ff0000[ " + $@instance_points[3] + " ]^000000";
 						mes "^ff0000-----------------------------------------------------^000000";
 						next;
 						mes "[ Difficulty Information ]";
 						mes "^ff0000-----------------------------------------------------^000000";
 						mes "Difficulty Level: ^ff0000[ Hell ]^000000";
-						mes "Monster HP: ^ff0000[ + 150% ]^000000";
-						mes "Monster damage: + ^ff0000[ 150% ]^000000";
-						mes "Monster takes less damage: + ^ff0000[ 30% ]^000000";
-						mes "Monster EXP reward: + ^ff0000[ 150% ]^000000";
-						mes ""+.@md_name$ +" Hell Points: + ^ff0000[ 80 ]^000000";
+						mes "Monster max hp: + ^ff0000[ " + $@hell_mode_variables[0] + "% ]^000000";
+						mes "Monster damage: + ^ff0000[ " + $@hell_mode_variables[1] + "% ]^000000";
+						mes "Monster takes less damage: ^ff0000[ " + $@hell_mode_variables[2] + "% ]^000000";
+						mes "Monster def: + ^ff0000[ " + $@hell_mode_variables[3] + "% ]^000000";
+						mes "Monster mdef: + ^ff0000[ " + $@hell_mode_variables[4] + "% ]^000000";
+						mes "Monster hit: + ^ff0000[ " + $@hell_mode_variables[5] + "% ]^000000";
+						mes "Monster flee: + ^ff0000[ " + $@hell_mode_variables[6] + "% ]^000000";
+						mes "Monster bonus exp reward: x ^ff0000[ " + $@bonus_exp[4] + " ]^000000";
+						mes ""+.@md_name$ +" Hell Points: + ^ff0000[ " + $@instance_points[4] + " ]^000000";
 						mes "^ff0000-----------------------------------------------------^000000";
 						next;
 						mes "[ Difficulty Information ]";
 						mes "^ff0000-----------------------------------------------------^000000";
 						mes "Difficulty Level: ^ff0000[ Torment ]^000000";
-						mes "Monster HP: ^ff0000[ + 200% ]^000000";
-						mes "Monster damage: + ^ff0000[ 200% ]^000000";
-						mes "Monster takes less damage: + ^ff0000[ 40% ]^000000";
-						mes "Monster EXP reward: + ^ff0000[ 200% ]^000000";
-						mes ""+.@md_name$ +" Torment Points: + ^ff0000[ 160 ]^000000";
+						mes "Monster max hp: + ^ff0000[ " + $@torment_mode_variables[0] + "% ]^000000";
+						mes "Monster damage: + ^ff0000[ " + $@torment_mode_variables[1] + "% ]^000000";
+						mes "Monster takes less damage: ^ff0000[ " + $@torment_mode_variables[2] + "% ]^000000";
+						mes "Monster def: + ^ff0000[ " + $@torment_mode_variables[3] + "% ]^000000";
+						mes "Monster mdef: + ^ff0000[ " + $@torment_mode_variables[4] + "% ]^000000";
+						mes "Monster hit: + ^ff0000[ " + $@torment_mode_variables[5] + "% ]^000000";
+						mes "Monster flee: + ^ff0000[ " + $@torment_mode_variables[6] + "% ]^000000";
+						mes "Monster bonus exp reward: x ^ff0000[ " + $@bonus_exp[5] + " ]^000000";
+						mes ""+.@md_name$ +" Torment Points: + ^ff0000[ " + $@instance_points[5] + " ]^000000";
 						mes "^ff0000-----------------------------------------------------^000000";
 						close;				
 					case 5:
@@ -402,15 +422,15 @@ L_Enter:
 		mes "You can enter the dungeon after making the party.";
 		close;
 	case IE_OK:
-		//if (getarg(1)) {
+		if (getarg(1)) {
 			set etower_timer,gettimetick(2);
 			set etower_partyid, getcharid(1);
 			setquest 60200;
 			setquest 60201;
-		//}
+		}
 		//warpparty instance_mapname("1@tower"),52,354,getcharid(1);
 		//warp "1@tower",52,354;
-		//if (getarg(0) == 0) close;
+		if (getarg(0) == 0) close;
 		end;
 	}
 }
@@ -489,158 +509,12 @@ e_tower,151,185,4	script	Purification Stone#et2	844,{
 	warp "e_tower",75,108;
 	end;
 }
-// Difficulty Function
-//============================================================
-function	script	F_Tower_Monster_Summon	{
-	.@map$ = getarg(0, "");
-	.@x1 = getarg(1, 0);
-	.@y1 = getarg(2, 0);
-	.@x2 = getarg(3, 0);
-	.@y2 = getarg(4, 0);
-	.@mob_name$ = getarg(5, "");
-	.@mob_id = getarg(6, 0);
-	.@amount = getarg(7, 0);
-	.@label$ = getarg(8, "");
-	
-	
-	switch('level_mode){
-		case 1://Normal
-			.@bonus_hp_rate += 0;
-			.@bonus_dmg_rate += 0;
-			.@bonus_damagetaken += 0;
-			.@bonus_def += 0;
-			.@bonus_mdef += 0;
-			.@bonus_hit += 0;			
-			.@bonus_flee += 0;
-			break;
-		case 2://Veteran
-			.@bonus_hp_rate += 50;
-			.@bonus_dmg_rate += 50;
-			.@bonus_damagetaken += -10;
-			.@bonus_def += 50;
-			.@bonus_mdef += 50;
-			.@bonus_hit += 50;			
-			.@bonus_flee += 50;		
-			break;
-		case 3://Nightmare
-			.@bonus_hp_rate += 100;
-			.@bonus_dmg_rate += 100;
-			.@bonus_damagetaken += -20;
-			.@bonus_def += 100;
-			.@bonus_mdef += 100;
-			.@bonus_hit += 100;			
-			.@bonus_flee += 100;					
-			break;
-		case 4://Hell
-			.@bonus_hp_rate += 150;
-			.@bonus_dmg_rate += 150;
-			.@bonus_damagetaken += -30;
-			.@bonus_def += 150;
-			.@bonus_mdef += 150;
-			.@bonus_hit += 150;			
-			.@bonus_flee += 150;			
-			break;
-		case 5://Torment
-			.@bonus_hp_rate += 200;
-			.@bonus_dmg_rate += 200;
-			.@bonus_damagetaken += -40;
-			.@bonus_def += 200;
-			.@bonus_mdef += 200;
-			.@bonus_hit += 200;			
-			.@bonus_flee += 200;				
-			break;
-	}
-	deletearray $@mobid,getarraysize($@mobid);
-	areamonster .@map$, .@x1, .@y1, .@x2, .@y2, .@mob_name$, .@mob_id, .@amount, .@label$;
-	copyarray .@GID, $@mobid, getarraysize($@mobid);
-	if(!.@bonus_hp_rate&& !.@bonus_dmg_rate&& !.@bonus_damagetaken&& !.@bonus_def&& !.@bonus_mdef&& !.@bonus_hit&& !.@bonus_flee)
-		return;
-	getunitdata .@GID, .@ST;
 
-freeloop(1);
-	for (.@i = 0; .@i < getarraysize(.@GID); .@i++) {
-		if(.@bonus_hp_rate){
-			.@HP = .@ST[UMOB_MAXHP] + ((.@ST[UMOB_MAXHP] * .@bonus_hp_rate ) /100);			
-				setunitdata(.@GID[.@i], UMOB_MAXHP, .@HP);
-				setunitdata(.@GID[.@i], UMOB_HP, .@HP);
-		}
-		if(.@bonus_dmg_rate){
-			.@ATKMIN = .@ST[UMOB_ATKMIN] + ((.@ST[UMOB_ATKMIN] * .@bonus_dmg_rate) /100);
-			.@ATKMAX = .@ST[UMOB_ATKMAX] + ((.@ST[UMOB_ATKMAX] * .@bonus_dmg_rate) /100);
-			.@MATKMIN = .@ST[UMOB_MATKMIN] + ((.@ST[UMOB_MATKMIN] * .@bonus_dmg_rate) /100);
-			.@MATKMAX = .@ST[UMOB_MATKMAX] + ((.@ST[UMOB_MATKMAX] * .@bonus_dmg_rate) /100);
-				setunitdata(.@GID[.@i], UMOB_ATKMIN, .@ATKMIN);
-				setunitdata(.@GID[.@i], UMOB_ATKMAX, .@ATKMAX);
-				setunitdata(.@GID[.@i], UMOB_MATKMIN, .@MATKMIN);
-				setunitdata(.@GID[.@i], UMOB_MATKMAX, .@MATKMAX);
-		}
-		if(.@bonus_damagetaken){
-			.@DAMAGETAKEN = .@ST[UMOB_DAMAGETAKEN] + ((.@ST[UMOB_DAMAGETAKEN] * .@bonus_damagetaken) /100);
-				setunitdata(.@GID[.@i], UMOB_DAMAGETAKEN, .@DAMAGETAKEN);
-		}
-		if(.@bonus_def){
-			.@DEF = .@ST[UMOB_DEF] + ((.@ST[UMOB_DEF] * .@bonus_def) /100);	
-				setunitdata(.@GID[.@i], UMOB_DEF, .@DEF);
-		}	
-		if(.@bonus_mdef){
-			.@MDEF = .@ST[UMOB_MDEF] + ((.@ST[UMOB_MDEF] * .@bonus_mdef) /100);	
-				setunitdata(.@GID[.@i], UMOB_MDEF, .@MDEF);
-		}
-		if(.@bonus_hit){
-			.@HIT = .@ST[UMOB_HIT] + ((.@ST[UMOB_HIT] * .@bonus_hit) /100);	
-				setunitdata(.@GID[.@i], UMOB_HIT, .@HIT);
-		}		
-		if(.@bonus_flee){
-			.@FLEE = .@ST[UMOB_FLEE] + ((.@ST[UMOB_FLEE] * .@bonus_flee) /100);	
-				setunitdata(.@GID[.@i], UMOB_FLEE, .@FLEE);
-		}
-	}
-freeloop(0);
-return;
-}
-// Exp Reward Function
-//============================================================
-function	script	F_Tower_Exp	{
-	setarray .@bonusExp[1],0,50,100,150,200;
-	'bonuzExp = .@bonusExp['level_mode];
-	set BaseExp, BaseExp + (getmonsterinfo(killedrid,MOB_BASEEXP) * 'bonuzExp);
-	set JobExp, JobExp + (getmonsterinfo(killedrid,MOB_JOBEXP) * 'bonuzExp);	
-return;
-}
-// Reward Function
-//============================================================
-function	script	F_Tower_Reward	{
-	setarray .@md_points[1], 10, 20, 40, 80, 160;
-	setarray .@modes$[1], "Easy Mode", "Veteran Mode", "Nightmare Mode", "Hell Mode", "Torment Mode";
-	setarray .@var_names$[1], "ETOWER_EASY", "ETOWER_VETERAN", "ETOWER_NIGHTMARE", "ETOWER_HELL", "ETOWER_TORMENT";
-	
-	'md_points = .@md_points['level_mode];
-	'modez$ = .@modes$['level_mode];
-	'var_name$ = .@var_names$['level_mode];
-	'party_id = instance_live_info(ILI_OWNER);
-	
-	getpartymember 'party_id, 1;
-	getpartymember 'party_id, 2;
-	'map$ = instance_mapname("6@tower");
-	copyarray .@CID, $@partymembercid, $@partymembercount;
-	copyarray .@AID, $@partymemberaid, $@partymembercount;
-	for (.@i = 0; .@i < getarraysize(.@CID); .@i++) {
-		if (isloggedin(.@AID[.@i], .@CID[.@i])) {
-			if (strcharinfo(3, .@CID[.@i]) == 'map$) {
-				setd("#" + 'var_name$, getd("#" + 'var_name$) + 'md_points);
-				announce "The party [ " + getpartyname('party_id) + " ] has defeated Endless Tower on " + 'modez$ + ".", bc_all;
-				message strcharinfo(0, .@CID[.@i]), "You've been granted " + 'md_points + " " + 'var_name$ + ".";
-				message strcharinfo(0, .@CID[.@i]), "You now have " + getd("#" + 'var_name$) + " " + 'var_name$ + ".";
-			}
-		}
-	}
-	return;
-}
 // Core Functions
 //============================================================
 function	script	F_Tower_Monster	{
-	setarray .@monster_alias$[1], "", "Veteran ", "Nightmare ", "Hellish ", "Tormented ";
-	'monster_alias$ = .@monster_alias$['level_mode];
+	
+	'monster_alias$ = $@monster_alias$['level_mode];
 	
 	set .@level, getarg(0);
 	set .@map$, getarg(1);
@@ -2489,6 +2363,224 @@ OnTimer1000:
 	end;
 }
 
+// Difficulty Function
+//============================================================
+function	script	F_Tower_Monster_Summon	{
+	.@map$ = getarg(0, "");
+	.@x1 = getarg(1, 0);
+	.@y1 = getarg(2, 0);
+	.@x2 = getarg(3, 0);
+	.@y2 = getarg(4, 0);
+	.@mob_name$ = getarg(5, "");
+	.@mob_id = getarg(6, 0);
+	.@amount = getarg(7, 0);
+	.@label$ = getarg(8, "");
+	
+	switch('level_mode){
+		case 1://Normal
+			.@bonus_hp_rate += $@easy_mode_variables[0];
+			.@bonus_dmg_rate += $@easy_mode_variables[1];
+			.@bonus_damagetaken += $@easy_mode_variables[2];
+			.@bonus_def += $@easy_mode_variables[3];
+			.@bonus_mdef += $@easy_mode_variables[4];
+			.@bonus_hit += $@easy_mode_variables[5];			
+			.@bonus_flee += $@easy_mode_variables[6];
+			break;
+		case 2://Veteran
+			.@bonus_hp_rate += $@veteran_mode_variables[0];
+			.@bonus_dmg_rate += $@veteran_mode_variables[1];
+			.@bonus_damagetaken += $@veteran_mode_variables[2];
+			.@bonus_def += $@veteran_mode_variables[3];
+			.@bonus_mdef += $@veteran_mode_variables[4];
+			.@bonus_hit += $@veteran_mode_variables[5];			
+			.@bonus_flee += $@veteran_mode_variables[6];		
+			break;
+		case 3://Nightmare
+			.@bonus_hp_rate += $@nightmare_mode_variables[0];
+			.@bonus_dmg_rate += $@nightmare_mode_variables[1];
+			.@bonus_damagetaken += $@nightmare_mode_variables[2];
+			.@bonus_def += $@nightmare_mode_variables[3];
+			.@bonus_mdef += $@nightmare_mode_variables[4];
+			.@bonus_hit += $@nightmare_mode_variables[5];			
+			.@bonus_flee += $@nightmare_mode_variables[6];					
+			break;
+		case 4://Hell
+			.@bonus_hp_rate += .@hell_mode_variables[0];
+			.@bonus_dmg_rate += .@hell_mode_variables[1];
+			.@bonus_damagetaken += .@hell_mode_variables[2];
+			.@bonus_def += .@hell_mode_variables[3];
+			.@bonus_mdef += .@hell_mode_variables[4];
+			.@bonus_hit += .@hell_mode_variables[5];			
+			.@bonus_flee += .@hell_mode_variables[6];			
+			break;
+		case 5://Torment
+			.@bonus_hp_rate += $@torment_mode_variables[0];
+			.@bonus_dmg_rate += $@torment_mode_variables[1];
+			.@bonus_damagetaken += $@torment_mode_variables[2];
+			.@bonus_def += $@torment_mode_variables[3];
+			.@bonus_mdef += $@torment_mode_variables[4];
+			.@bonus_hit += $@torment_mode_variables[5];			
+			.@bonus_flee += $@torment_mode_variables[6];				
+			break;
+	}
+
+	deletearray $@mobid,getarraysize($@mobid);
+	areamonster .@map$, .@x1, .@y1, .@x2, .@y2, .@mob_name$, .@mob_id, .@amount, .@label$;
+	copyarray .@GID, $@mobid, getarraysize($@mobid);
+	getunitdata .@GID, .@ST;
+
+freeloop(1);
+	for (.@i = 0; .@i < getarraysize(.@GID); .@i++) {
+		if(.@bonus_hp_rate){
+			.@HP = .@ST[UMOB_MAXHP] + ((.@ST[UMOB_MAXHP] * .@bonus_hp_rate ) /100);			
+				setunitdata(.@GID[.@i], UMOB_MAXHP, .@HP);
+				setunitdata(.@GID[.@i], UMOB_HP, .@HP);
+		}
+		if(.@bonus_dmg_rate){
+			.@ATKMIN = .@ST[UMOB_ATKMIN] + ((.@ST[UMOB_ATKMIN] * .@bonus_dmg_rate) /100);
+			.@ATKMAX = .@ST[UMOB_ATKMAX] + ((.@ST[UMOB_ATKMAX] * .@bonus_dmg_rate) /100);
+			.@MATKMIN = .@ST[UMOB_MATKMIN] + ((.@ST[UMOB_MATKMIN] * .@bonus_dmg_rate) /100);
+			.@MATKMAX = .@ST[UMOB_MATKMAX] + ((.@ST[UMOB_MATKMAX] * .@bonus_dmg_rate) /100);
+				setunitdata(.@GID[.@i], UMOB_ATKMIN, .@ATKMIN);
+				setunitdata(.@GID[.@i], UMOB_ATKMAX, .@ATKMAX);
+				setunitdata(.@GID[.@i], UMOB_MATKMIN, .@MATKMIN);
+				setunitdata(.@GID[.@i], UMOB_MATKMAX, .@MATKMAX);
+		}
+		if(.@bonus_damagetaken){
+			.@DAMAGETAKEN = .@ST[UMOB_DAMAGETAKEN] + ((.@ST[UMOB_DAMAGETAKEN] * .@bonus_damagetaken) /100);
+				setunitdata(.@GID[.@i], UMOB_DAMAGETAKEN, .@DAMAGETAKEN);
+		}
+		if(.@bonus_def){
+			.@DEF = .@ST[UMOB_DEF] + ((.@ST[UMOB_DEF] * .@bonus_def) /100);	
+				setunitdata(.@GID[.@i], UMOB_DEF, .@DEF);
+		}	
+		if(.@bonus_mdef){
+			.@MDEF = .@ST[UMOB_MDEF] + ((.@ST[UMOB_MDEF] * .@bonus_mdef) /100);	
+				setunitdata(.@GID[.@i], UMOB_MDEF, .@MDEF);
+		}
+		if(.@bonus_hit){
+			.@HIT = .@ST[UMOB_HIT] + ((.@ST[UMOB_HIT] * .@bonus_hit) /100);	
+				setunitdata(.@GID[.@i], UMOB_HIT, .@HIT);
+		}		
+		if(.@bonus_flee){
+			.@FLEE = .@ST[UMOB_FLEE] + ((.@ST[UMOB_FLEE] * .@bonus_flee) /100);	
+				setunitdata(.@GID[.@i], UMOB_FLEE, .@FLEE);
+		}
+	}
+freeloop(0);
+return;
+}
+// Exp Reward Function
+//============================================================
+function	script	F_Tower_Exp	{
+	'bonus_exp = $@bonus_exp['level_mode];
+	getexp (getmonsterinfo(killedrid,MOB_BASEEXP) * 'bonus_exp),(getmonsterinfo(killedrid,MOB_JOBEXP) * 'bonus_exp);	
+return;
+}
+// Reward Function
+//============================================================
+function	script	F_Tower_Reward	{
+	
+	'instance_points = $@instance_points['level_mode];
+	'difficulty_mode$ = $@difficulty_mode$['level_mode];
+	'var_name$ = $@var_names$['level_mode];
+	'party_id = instance_live_info(ILI_OWNER);
+	
+	getpartymember 'party_id, 1;
+	getpartymember 'party_id, 2;
+	'map$ = instance_mapname("6@tower");
+	
+	copyarray .@CID, $@partymembercid, $@partymembercount;
+	copyarray .@AID, $@partymemberaid, $@partymembercount;
+	
+	for (.@i = 0; .@i < getarraysize(.@CID); .@i++) {
+		if (isloggedin(.@AID[.@i], .@CID[.@i])) {
+			if (strcharinfo(3, .@CID[.@i]) == 'map$) {
+				setd("#" + 'var_name$, getd("#" + 'var_name$) + 'instance_points);
+				announce "The party [ " + getpartyname('party_id) + " ] has defeated Endless Tower on " + 'difficulty_mode$ + ".", bc_all;
+				message strcharinfo(0, .@CID[.@i]), "You've been granted " + 'instance_points + " " + 'var_name$ + ".";
+				message strcharinfo(0, .@CID[.@i]), "You now have " + getd("#" + 'var_name$) + " " + 'var_name$ + ".";
+			}
+		}
+	}
+	return;
+}
+
+// Tower Settings
+//============================================================
+function	script	F_Tower_Settings	{
+
+	setarray $@easy_mode_variables, 0			//bonus_hp_rate
+									, 0			//bonus_dmg_rate
+									, 0			//bonus_damagetaken
+									, 0			//bonus_def
+									, 0			//bonus_mdef
+									, 0			//bonus_hit
+									, 0;		//bonus_flee
+									
+	setarray $@veteran_mode_variables, 50		//bonus_hp_rate
+									, 50		//bonus_dmg_rate
+									, -10		//bonus_damagetaken
+									, 50		//bonus_def
+									, 50		//bonus_mdef
+									, 50		//bonus_hit
+									, 50;		//bonus_flee
+									
+	setarray $@nightmare_mode_variables, 100		//bonus_hp_rate
+									, 100		//bonus_dmg_rate
+									, -20		//bonus_damagetaken
+									, 100		//bonus_def
+									, 100		//bonus_mdef
+									, 100		//bonus_hit
+									, 100;		//bonus_flee
+									
+	setarray $@hell_mode_variables, 150			//bonus_hp_rate
+									, 150		//bonus_dmg_rate
+									, -30		//bonus_damagetaken
+									, 150		//bonus_def
+									, 150		//bonus_mdef
+									, 150		//bonus_hit
+									, 150;		//bonus_flee
+									
+	setarray $@torment_mode_variables, 200		//bonus_hp_rate
+									, 200		//bonus_dmg_rate
+									, -40		//bonus_damagetaken
+									, 200		//bonus_def
+									, 200		//bonus_mdef
+									, 200		//bonus_hit
+									, 200;		//bonus_flee
+									
+	setarray $@bonus_exp[1], 0					//easy_bonus_exp
+						, 50					//veteran_bonus_exp
+						, 100					//nightmare_bonus_exp
+						, 150					//hell_bonus_exp
+						, 200;					//torment_bonus_exp
+
+	setarray $@instance_points[1], 10			//easy mode
+								, 20			//veteran mode
+								, 40			//nightmare mode
+								, 80			//hell mode
+								, 160;			//torment mode
+								
+	setarray $@monster_alias$[1], ""			//monster alias
+								, "Veteran "
+								, "Nightmare "
+								, "Hellish "
+								, "Tormented ";								
+	
+	setarray $@difficulty_mode$[1], "Easy Mode"	//announcement
+								, "Veteran Mode"
+								, "Nightmare Mode"
+								, "Hell Mode"
+								, "Torment Mode";
+								
+	setarray $@var_names$[1], "ETOWER_EASY"		//custom cashpoints variable name
+							, "ETOWER_VETERAN"
+							, "ETOWER_NIGHTMARE"
+							, "ETOWER_HELL"
+							, "ETOWER_TORMENT";							
+return;
+}
 // Settings :
 //	-	Only required to edit the ShopSetting() Function
 //			Notes : You may also add / remove Menu ( If any ) 
